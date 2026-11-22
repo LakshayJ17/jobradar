@@ -1,0 +1,77 @@
+name: jobradar daily
+
+# Finds new jobs every morning and commits your tracker (data/jobs.json) back to this repo. Because the tracker
+# shows what you applied to, this only runs in a PRIVATE repo; in a public one (like the project itself) it
+# does nothing. Setup: README "Run it every morning".
+
+on:
+  schedule:
+    - cron: "30 2 * * *"   # 08:00 IST every day (GitHub may start it a few minutes late)
+  workflow_dispatch: {}      # "Run workflow" button for an on-demand run
+
+permissions:
+  contents: write            # commit the updated tracker back to this repo
+
+concurrency:
+  group: jobradar
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      private: ${{ steps.check.outputs.private }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          private=$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)
+          echo "private=$private" >> "$GITHUB_OUTPUT"
+          if [ "$private" != "true" ]; then
+            echo "::notice::Skipped: this repo is public, and the daily run commits your job tracker. Run it from a private copy (see README)."
+          fi
+
+  run:
+    needs: gate
+    if: needs.gate.outputs.private == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Check your profile is committed
+        run: |
+          if [ ! -f config/profile.yaml ]; then
+            echo "::warning::config/profile.yaml is not in the repo, so the template profile is used. Commit yours: git add -f config/profile.yaml"
+          fi
+
+      - name: Find, filter, score, notify
+        env:   # all optional - add them under Settings > Secrets and variables > Actions
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          JOBRADAR_RESUME_TEXT: ${{ secrets.JOBRADAR_RESUME_TEXT }}
+        run: uv run --frozen jobradar run
+
+      - name: Save tracker
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # data/ is git-ignored so nobody commits a tracker by accident; -f adds it here, in your private repo
+          git add -f data/jobs.json data/jobs.csv data/reports/*.md
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -q -m "jobradar: daily update $(date -u +%F)"
+          git pull -q --rebase && git push -q
+
+      - name: Keep the interactive report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jobradar-report
+          path: data/reports/latest.html
+          retention-days: 7

@@ -1,0 +1,122 @@
+# jobradar profile. `jobradar init` copies this file to config/profile.yaml, which is yours and git-ignored.
+# Edit that copy, not this one. Anything you leave out falls back to the defaults below.
+# All patterns are regular expressions, matched case-insensitively.
+
+# ---------------------------------------------------------------- about you
+name: ""                          # optional; drafts use it. Otherwise the name is read from your resume
+graduation_year: 2026             # your batch: posts restricted to other batches are dropped
+degree: "B.Tech in Computer Science and Engineering"
+# Drop your resume in profile/ (.pdf, .txt or .md, any file name). Without one, the summary + skills are used.
+resume_file: profile/resume.pdf
+summary: ""                       # optional, 2-3 lines about you; used when there is no resume file
+# Skills found in a job description raise its rule score (+2 each, max +20). Matching is whole-word, so list the
+# spellings job posts use ("node.js" and "nodejs", "llm" and "llms").
+# !! Drafted emails and DMs treat your resume, summary and this list as TRUE. List only what you can defend in an
+# interview. Example: [python, java, sql, react, node.js, nodejs, docker, git, data structures, algorithms]
+skills: []
+
+# ---------------------------------------------------------------- experience
+# The template is set up for a fresher. For experienced roles, see "Other setups" in the README.
+experience_years: 0               # your own full-time experience. 0 = fresher. The AI and the rule score use it
+max_years_required: 1             # drop jobs whose description asks for more years than this
+min_years_required: 0             # drop jobs that ask for fewer years than this (e.g. 2 hides fresher roles). 0 = off
+# Some boards label each job's level. Jobs with these labels are dropped. Choose from: entry, senior, director,
+# executive. A fresher keeps [senior, director, executive]; with 3+ years, use [director, executive].
+exclude_levels: [senior, director, executive]
+
+# ---------------------------------------------------------------- what you want
+# In plain words, for the AI: jobs that aren't one of these are marked ineligible.
+looking_for: "software engineering, AI / ML or data roles"
+# A job title must match at least one pattern in any of these families. Family names are yours to choose.
+roles:
+  software:
+    - 'software (development |dev )?engineer'
+    - '\bsde\b|\bswe\b|\bsdet\b'
+    - 'software developer|developer'
+    - 'back[- ]?end|front[- ]?end|full[- ]?stack|\bui engineer|web engineer'
+    - 'member of (the )?technical staff|\bmts\b'
+    - 'platform engineer|cloud engineer|devops|site reliability|\bsre\b|infrastructure engineer'
+    - 'mobile engineer|android|ios engineer'
+    - 'forward deployed engineer|product engineer|application engineer|systems? engineer'
+    - 'qa engineer|test automation|quality engineer'
+    - '^engineer\b'
+  ai:
+    - 'machine learning|\bml\b|mlops'
+    - '\bai\b|artificial intelligence|gen ?ai|\bllm\b|agentic'
+    - 'data scientist|applied scientist|research engineer'
+    - '\bnlp\b|computer vision|deep learning'
+    - 'prompt engineer|llm evaluation|evaluation engineer'
+  data:
+    - 'data engineer|analytics engineer|data analyst'
+  early_career:                   # special family: such a title must also name your field (below)
+    - 'graduate|new grad|fresher|trainee|apprentice'
+    - 'entry[- ]level|early career|university|campus'
+    - 'associate (software )?engineer|junior'
+# A title like "Graduate Trainee" is kept only if it also matches this (so "Graduate Trainee - Sales" isn't).
+early_career_title_needs: 'engineer|developer|software|technolog|programm|data|\bai\b|\bml\b|\bit\b|\bsde\b|cloud|cyber'
+
+# Any match here drops the job (seniority, non-engineering, hardware...). With experience, delete the first line.
+exclude_titles:
+  - 'senior|\bsr\b\.?|\blead\b|(?<!technical )\bstaff\b|principal|distinguished|architect'
+  - 'manager|director|\bhead\b|\ba?vp\b|vice president|president|chief|\bowner\b|scrum master|intermediate'
+  - '\b(s|l|p|sr\.? ?)mts\b|\bsde ?(2|3|ii|iii)\b'
+  - '\b(ii|iii|iv)\b|level [2-9]|\bl[3-9]\b|\bic[3-9]\b'
+  - '\b(engineer|developer|scientist|sde|swe|mts|analyst)\s*[-,]?\s*(2|3|4|5)\b'
+  - 'sales|account (executive|manager)|business develop(ment|er)|pre-?sales|solutions? (engineer|consultant|architect)'
+  - 'recruit|talent acquisition|marketing|legal|counsel|finance|accountant|payroll|\boperations\b'
+  - 'customer success|support engineer|technical support|consultant|business analyst'
+  - 'designer|hardware|\bhw\b|semiconductor|\badmin(istrator)?\b|asic|\brtl\b|vlsi|analog|physical design|design verification|silicon|layout'
+  - 'mechanical|electrical|\brf\b|antenna|manufacturing|technician|field (service|application) engineer|civil'
+  - 'phd|post-?doc'
+  - 'part[- ]?time|freelanc|commission'
+
+# Any match in the job description drops it (grade markers some banks put in the text, not the title).
+exclude_description:
+  - '(assistant )?vice president expectations|director expectations|managing director'
+  # common fresher job scams: you should never pay to get a job
+  - '(registration|processing|training|joining|security|interview|placement)[- ]?(fee|deposit|charges?)|refundable deposit|pay (?:a |an )?(?:fee|amount|deposit)'
+
+include_internships: false        # true = also show internships (e.g. 6-month with PPO)
+max_age_days: 30                  # ignore postings older than this (when the board says)
+
+locations:
+  # Career sites with a country filter (Workday, Oracle, Microsoft, Amazon, Google, Wellfound) are searched in this
+  # country. Elsewhere, list your own cities under accept.
+  country: India
+  # A job counts when its location mentions any of these (city names, the country, a group from below).
+  accept: [india, bengaluru, bangalore, hyderabad, pune, mumbai, chennai, gurgaon, gurugram, noida,
+           delhi, "new delhi", ncr, "delhi ncr", kolkata, ahmedabad, jaipur, kochi, chandigarh, indore, coimbatore,
+           trivandrum, thiruvananthapuram, mysore, mysuru, mohali, nagpur, bhubaneswar, vadodara]
+  # Jobs here rank higher (nothing is hidden). Built-in groups: "delhi ncr" = Delhi, Gurugram/Gurgaon, Noida,
+  # Greater Noida, Faridabad, Ghaziabad; also bengaluru, mumbai, pune, hyderabad, chennai, kolkata.
+  preferred: []                   # e.g. [delhi ncr] or [bengaluru, pune]
+  groups: {}                      # your own, e.g. {bay area: [san francisco, palo alto, mountain view, san jose]}
+  preferred_boost: 10             # ranking lift in points (the score shown doesn't change). 0 = off
+  remote_is_preferred: true       # remote jobs open to you get the same lift (you can do them from home)
+  remote: true                    # accept remote roles whose location mentions one of remote_open_to
+  remote_open_to: [india, apac, asia, anywhere, worldwide, global]
+
+# ---------------------------------------------------------------- pay
+# Only ~25% of postings list pay (mostly Internshala, Shine, Unstop, Wellfound); big companies almost never do.
+salary:
+  currency: INR                   # pay is shown in this: INR as LPA, others in thousands a year (USD: "$90k-120k")
+  min: 0                          # hide jobs whose listed pay tops out below this: INR in LPA (6 = ₹6 LPA),
+                                  # other currencies in thousands a year (USD 90 = $90k). 0 = off
+  hide_unknown: false             # true = also hide jobs that don't list pay (would drop most big companies)
+
+# ---------------------------------------------------------------- AI (optional, free tier)
+ai:
+  enabled: true                   # silently skipped when GEMINI_API_KEY is not set
+  # Tried in order; when one hits its free daily quota the next is used. Run `jobradar doctor` to check.
+  models: [gemini-3.5-flash-lite, gemini-3.1-flash-lite, gemma-4-31b-it]
+  draft_models: [gemini-3.8-flash, gemini-3.5-flash, gemini-3.5-flash-lite]
+  max_jobs_per_run: 150           # cap on jobs scored per run (~25 requests; free tier allows ~500/day)
+  batch_size: 6                   # jobs per request
+  rpm: 10                         # stay under the free requests-per-minute limit
+
+# ---------------------------------------------------------------- digest
+notify:
+  top_n: 15                       # jobs per digest
+  min_score: 55                   # only send jobs at or above this score (AI fit if scored, else rule score)
+  telegram: true                  # needs TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID
+  email: true                     # needs SMTP_USER + SMTP_PASSWORD + EMAIL_TO

@@ -1,0 +1,38 @@
+[project]
+name = "jobradar"
+version = "0.1.0"
+description = "Free daily job finder that follows your profile: 17 platforms and 110+ career sites, filters for role, experience, location and pay, optional free-tier Gemini scoring, a tracker and a digest"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Lakshay Jain" }]
+requires-python = ">=3.11"
+keywords = ["jobs", "job-search", "freshers", "india", "scraper", "gemini", "github-actions"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Topic :: Office/Business",
+]
+dependencies = [
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+    "pypdf>=4.0",
+]
+
+[project.scripts]
+jobradar = "jobradar.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jobradar"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

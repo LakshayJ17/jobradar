@@ -1,0 +1,16 @@
+# ---- yours: personal files that never go into the repo (see README "What stays private")
+.env
+config/profile.yaml
+profile/*
+!profile/.gitkeep
+!profile/README.md
+# the tracker, reports and drafts. The daily GitHub Action commits the tracker with `git add -f`,
+# and only in a private repo.
+data/
+
+# ---- tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store

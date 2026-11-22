@@ -1,0 +1,33 @@
+name: tests
+
+on:
+  push:
+    paths-ignore: ["data/**", "**.md"]
+  pull_request:
+    paths-ignore: ["data/**", "**.md"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: uv sync --frozen --group dev
+      - name: Tests (offline)
+        run: uv run --frozen pytest -q
+      - name: CLI smoke test (no network, no keys)
+        run: |
+          uv run --frozen jobradar init
+          uv run --frozen jobradar doctor
+          uv run --frozen jobradar list

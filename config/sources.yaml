@@ -1,0 +1,182 @@
+# Where jobradar looks. Only public job-board endpoints the companies publish for exactly this purpose
+# (Greenhouse / Lever / Ashby / SmartRecruiters / Workable job-board APIs), plus career-site search
+# endpoints whose robots.txt allows it (Workday, Amazon, Eightfold) - robots.txt is checked on every run.
+#
+# Every board below was verified live on 2026-11-16 to have open roles in India. Elsewhere, use `jobradar probe`
+# to find the boards of companies hiring where you are.
+# Add a company:  `uv run jobradar probe <company-slug> ...`  then paste the line it prints.
+
+greenhouse:            # slug: display name   (boards-api.greenhouse.io/v1/boards/<slug>/jobs)
+  okta: Okta
+  databricks: Databricks
+  zscaler: Zscaler
+  mongodb: MongoDB
+  purestorage: Pure Storage
+  highradius: HighRadius
+  stripe: Stripe
+  inmobi: InMobi
+  coupang: Coupang
+  sigmoid: Sigmoid
+  rubrik: Rubrik
+  gitlab: GitLab
+  glance: Glance
+  toast: Toast
+  netskope: Netskope
+  elastic: Elastic
+  hackerrank: HackerRank
+  imc: IMC Trading
+  airbnb: Airbnb
+  agoda: Agoda
+  druva: Druva
+  twilio: Twilio
+  coinbase: Coinbase
+  datadog: Datadog
+  groww: Groww
+  singlestore: SingleStore
+  coursera: Coursera
+  anthropic: Anthropic
+  jfrog: JFrog
+  neo4j: Neo4j
+  observeai: Observe.AI
+  togetherai: Together AI
+  launchdarkly: LaunchDarkly
+  samsara: Samsara
+  yugabyte: Yugabyte
+  newrelic: New Relic
+  figma: Figma
+  grafanalabs: Grafana Labs
+  cockroachlabs: Cockroach Labs
+  duolingo: Duolingo
+  scaleai: Scale AI
+  vercel: Vercel
+
+lever:                 # api.lever.co/v0/postings/<slug>
+  paytm: Paytm
+  meesho: Meesho
+  hevodata: Hevo Data
+  zeta: Zeta
+  mindtickle: Mindtickle
+  cred: CRED
+  nium: Nium
+  pocketfm: Pocket FM
+
+ashby:                 # api.ashbyhq.com/posting-api/job-board/<slug>
+  tekion: Tekion
+  sarvam: Sarvam AI
+  bureau: Bureau
+  spotdraft: SpotDraft
+  elevenlabs: ElevenLabs
+  snowflake: Snowflake
+  clickhouse: ClickHouse
+  openai: OpenAI
+  anyscale: Anyscale
+  atlan: Atlan
+  redis: Redis
+  deepgram: Deepgram
+  notion: Notion
+  temporal: Temporal
+  zapier: Zapier
+
+smartrecruiters:       # api.smartrecruiters.com/v1/companies/<id>/postings  (your country only)
+  swiggy: Swiggy
+  freshworks: Freshworks
+  ixigo: ixigo
+  servicenow: ServiceNow
+  grab: Grab
+  BoschGroup: Bosch
+  whatfix: Whatfix
+  upstox: Upstox
+  cars24: CARS24
+
+workable:              # apply.workable.com/api/v1/widget/accounts/<slug>
+  apna: apna
+
+rippling:              # api.rippling.com/platform/api/ats/v1/board/<slug>/jobs
+  rippling: Rippling
+  thoughtspot: ThoughtSpot
+
+workday:               # <tenant>.<wd>.myworkdayjobs.com/<site>  - only your country's postings are read
+  - {name: NVIDIA, tenant: nvidia, wd: wd5, site: NVIDIAExternalCareerSite}
+  - {name: Adobe, tenant: adobe, wd: wd5, site: external_experienced}
+  - {name: Salesforce, tenant: salesforce, wd: wd12, site: External_Career_Site}
+  - {name: Intel, tenant: intel, wd: wd1, site: External}
+  - {name: PayPal, tenant: paypal, wd: wd1, site: jobs}
+  - {name: Mastercard, tenant: mastercard, wd: wd1, site: CorporateCareers}
+  - {name: Workday, tenant: workday, wd: wd5, site: Workday}
+  - {name: Broadcom, tenant: broadcom, wd: wd1, site: External_Career}
+  - {name: Micron, tenant: micron, wd: wd1, site: External}
+  - {name: Target, tenant: target, wd: wd5, site: targetcareers}
+  - {name: Philips, tenant: philips, wd: wd3, site: jobs-and-careers}
+  - {name: Thomson Reuters, tenant: thomsonreuters, wd: wd5, site: External_Career_Site}
+  - {name: HPE, tenant: hpe, wd: wd5, site: Jobsathpe}
+  - {name: KLA, tenant: kla, wd: wd1, site: Search}
+  - {name: Analog Devices, tenant: analogdevices, wd: wd1, site: External}
+  - {name: Motorola Solutions, tenant: motorolasolutions, wd: wd5, site: Careers}
+  - {name: State Street, tenant: statestreet, wd: wd1, site: Global}
+  - {name: Fidelity, tenant: fmr, wd: wd1, site: FidelityCareers}
+  - {name: BlackRock, tenant: blackrock, wd: wd1, site: BlackRock_Professional}
+  - {name: CrowdStrike, tenant: crowdstrike, wd: wd5, site: crowdstrikecareers}
+  - {name: Equinix, tenant: equinix, wd: wd1, site: External}
+  - {name: athenahealth, tenant: athenahealth, wd: wd1, site: External}
+  - {name: Gartner, tenant: gartner, wd: wd5, site: EXT}
+  - {name: Cadence, tenant: cadence, wd: wd1, site: External_Careers}
+  - {name: Marvell, tenant: marvell, wd: wd1, site: MarvellCareers}
+  - {name: Barclays, tenant: barclays, wd: wd3, site: External_Career_Site_Barclays}
+  - {name: Morgan Stanley, tenant: ms, wd: wd5, site: External}
+
+amazon:                # amazon.jobs search, in your country (profile.yaml locations.country)
+  queries: [software development engineer, machine learning, applied scientist, data engineer,
+            software engineer, university graduate]
+
+eightfold:             # <host>/api/pcsx/search  (Eightfold career sites), in your country
+  - {name: Microsoft, host: apply.careers.microsoft.com, domain: microsoft.com}
+  - {name: Qualcomm, host: careers.qualcomm.com, domain: qualcomm.com}
+
+eightfold_queries: [software engineer, software developer, machine learning, data, graduate]
+
+oracle:                # Oracle Recruiting Cloud career sites - your country found via the site's location facet
+  - {name: JPMorgan Chase, host: jpmc.fa.oraclecloud.com, site: CX_1001}
+  - {name: Oracle, host: eeho.fa.us2.oraclecloud.com, site: CX_45001}
+
+google: {levels: [EARLY]}        # Google Careers, early-career roles in your country (scraped results pages)
+atlassian: {}                    # Atlassian's public listings feed
+unstop: {queries: [software, developer, engineer, data, machine learning, ai]}   # India fresher hiring
+wellfound: {roles: [software-engineer, full-stack-engineer, backend-engineer, frontend-engineer,
+                    machine-learning-engineer, data-scientist]}                  # startups (scraped)
+remote: [himalayas, remoteok, jobicy]   # remote boards; only roles open to you (locations.remote_open_to) survive
+
+# Generic scraper: any site whose job pages carry schema.org JobPosting data (most do - Google for Jobs needs it).
+# robots.txt and the no-fetch list in http.py are enforced on every request.
+scrape:
+  - name: Internshala
+    list_urls:
+      - https://internshala.com/fresher-jobs/software-development-jobs/
+      - https://internshala.com/fresher-jobs/web-development-jobs/
+      - https://internshala.com/fresher-jobs/data-science-jobs/
+      - https://internshala.com/fresher-jobs/machine-learning-jobs/
+      - https://internshala.com/fresher-jobs/artificial-intelligence-ai-jobs/
+      - https://internshala.com/fresher-jobs/python-django-jobs/
+    link_pattern: '^/job/detail/'
+    title_from_url: '/job/detail/(?:fresher-)?(.+?)-job-'
+    salary_label: 'CTC \(ANNUAL\)'      # pay shown on the page (its JSON-LD says 0)
+    max_details: 60
+  - name: Shine
+    list_urls:
+      - https://www.shine.com/job-search/software-engineer-fresher-jobs
+      - https://www.shine.com/job-search/fresher-software-developer-jobs
+      - https://www.shine.com/job-search/python-developer-fresher-jobs
+      - https://www.shine.com/job-search/machine-learning-fresher-jobs
+    link_pattern: '^/jobs/[^/]+/[^/]+/\d+'
+    title_from_url: '^/jobs/([^/]+)/'
+    salary_label: 'salary_text\\?"\s*:\s*\\?"'   # page data; "[Salary Hidden]" (employer's choice) stays unknown
+    max_details: 40
+  # Freshteam career sites (its JSON feed is disallowed by robots.txt; the /jobs pages are allowed)
+  - {name: Ninjacart, board: ninjacart, list_urls: ['https://ninjacart.freshteam.com/jobs'], link_pattern: '^/jobs/[^/]+/[^/]+',
+     title_from_url: '^/jobs/[^/]+/(.+)$', company_from_page: false, max_details: 25}
+  - {name: Haptik, board: haptik, list_urls: ['https://haptik.freshteam.com/jobs'], link_pattern: '^/jobs/[^/]+/[^/]+',
+     title_from_url: '^/jobs/[^/]+/(.+)$', company_from_page: false, max_details: 25}
+  - {name: Keka, board: keka, list_urls: ['https://keka.freshteam.com/jobs'], link_pattern: '^/jobs/[^/]+/[^/]+',
+     title_from_url: '^/jobs/[^/]+/(.+)$', company_from_page: false, max_details: 25}
+  - {name: Zetwerk, board: zetwerk, list_urls: ['https://zetwerk.freshteam.com/jobs'], link_pattern: '^/jobs/[^/]+/[^/]+',
+     title_from_url: '^/jobs/[^/]+/(.+)$', company_from_page: false, max_details: 25}
+
