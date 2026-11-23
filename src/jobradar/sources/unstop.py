@@ -45,11 +45,23 @@ def parse(rows: list) -> list[Job]:
             url="https://unstop.com/" + (r.get("public_url") or f"o/{r.get('id')}").lstrip("/"),
             location=loc, remote=True if remote else None,
             posted_at=date_from_iso((r.get("approved_date") or r.get("updated_at") or "")[:10]),
-            expires=date_from_iso((r.get("end_date") or "")[:10]),
+            expires=date_from_iso(str((r.get("regnRequirements") or {}).get("end_regn_dt") or r.get("end_date") or "")[:10]),
+            accepting=_accepting(r),
             description="\n\n".join(p for p in parts if p),
             employment_type=detail.get("timing") or "", level_hint=level, salary=_salary(detail),
         ))
     return jobs
+
+
+def _accepting(r: dict) -> bool | None:
+    """Unstop says whether registrations are open: regn_open 1/0 and status LIVE / EXPIRED / CLOSED."""
+    flags = [r.get("regn_open"), r.get("status"), (r.get("regnRequirements") or {}).get("reg_status")]
+    if all(f is None for f in flags):
+        return None
+    status = str(r.get("status") or "").upper()
+    reg = str((r.get("regnRequirements") or {}).get("reg_status") or "").upper()
+    return not (str(r.get("regn_open")) == "0" or status in ("EXPIRED", "CLOSED", "FINISHED", "ENDED")
+                or reg in ("ENDED", "CLOSED", "EXPIRED"))
 
 
 def _salary(detail: dict) -> list[float] | None:

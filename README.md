@@ -7,9 +7,9 @@ job, short outreach messages, and interview prep.
 It runs on your laptop or on GitHub Actions, needs no server or paid API, and keeps your data in local files.
 
 ```
-jobradar · 2026-11-16
-  boards     105 checked, 0 failed · 837 requests
-  postings   17449 listed → 236 unseen candidates → 52 new matches
+jobradar 2026-11-16
+  boards     105 checked, 0 failed, 837 requests
+  postings   17449 listed -> 236 unseen candidates -> 52 new matches
   dropped    location 11907, title-excluded 4294, title-not-target 677, too-old 329, needs-2y-exp 46, ...
   AI         52/52 scored with gemini-3.5-flash-lite (10 marked ineligible, 14 requests)
 
@@ -26,6 +26,8 @@ jobradar · 2026-11-16
 - **Filters by your rules**: role, experience, level, location, remote, pay floor, posting age, graduation batch,
   and common job scams such as registration fees. Every rule is a setting.
 - **Ranks with AI** (optional, Gemini free tier): eligibility, a fit score, a reason and your skill gaps for each job.
+- **Checks jobs are still open.** Postings that were taken down, stopped taking applications or passed their deadline
+  are detected and hidden, even when the link still loads.
 - **Tracks everything** in a local tracker, an interactive HTML report and a spreadsheet, with a daily digest by email
   or Telegram.
 - **Helps you apply** with `jobradar draft <id>`: your resume tailored to the job (PDF and Word) without inventing
@@ -62,7 +64,8 @@ uv run jobradar open       # open the report
 | `jobradar run` | Fetch, filter, score, report and notify. Flags: `--no-ai`, `--no-notify`, `--only <source or company>` |
 | `jobradar list` | Open matches, best first (`--new`, `--min 70`, `--company amazon`, `--status applied`) |
 | `jobradar show <id>` | Details, pay, AI reasoning and description for one job |
-| `jobradar draft <id>` | Application kit: tailored resume, messages and interview prep |
+| `jobradar check [<id> ...]` | Check jobs are still open: taken down, applications closed, deadline passed |
+| `jobradar draft <id>` | Application kit: tailored resume, messages and interview prep (checks the job is open first) |
 | `jobradar mark <id> applied` | Track progress: `saved`, `applied`, `oa`, `interview`, `offer`, `rejected`, `skipped` |
 | `jobradar mail` / `export` | Email every tracked job as a spreadsheet, or just save it |
 | `jobradar resume` | Show your resume as the AI sees it; `--setup` prepares it for tailoring |
@@ -74,7 +77,9 @@ uv run jobradar open       # open the report
 1. **Fetch** listings from the sources in `config/sources.yaml`, through public APIs or by reading public job pages.
 2. **Filter** them with the rules in your profile. No AI is needed for this.
 3. **Score** what's left against your resume with the free Gemini tier, about 15 requests on a normal day.
-4. **Track and notify**: new matches go to the tracker, the report, the spreadsheet and your digest.
+4. **Track and notify**: new matches go to the tracker, the report, the spreadsheet and your digest. Tracked jobs
+   are re-checked every few days and closed ones are hidden. Jobs you haven't acted on show as `new` while fresh, then
+   `to review`.
 5. **Apply** with an application kit for the jobs you pick ([details](docs/application-kit.md)).
 
 ## Privacy

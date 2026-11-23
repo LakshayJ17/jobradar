@@ -8,7 +8,7 @@ from jobradar.util import today
 
 @pytest.mark.parametrize("text, want", [
     ("WHAT YOU BRING\n- 8+ years strong expertise in using C++", 8),
-    ("• 2–5 years in DevOps, SRE, infrastructure", 2),
+    ("\u2022 2\u20135 years in DevOps, SRE, infrastructure", 2),
     ("Additional Information\n- 8 - 12 years", 8),
     ("Additional Information\n4 to 8 years", 4),
     ("Minimum 3 years of hands-on experience", 3),

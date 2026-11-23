@@ -8,7 +8,7 @@
 #set page(paper: st.paper, margin: (x: st.mx * 1cm, y: st.my * 1cm))
 #set text(font: st.font, size: st.size * 1pt, ligatures: false, hyphenate: false, lang: "en")
 #set par(justify: false, leading: st.leading * 1em, spacing: st.leading * 1em)
-#set list(indent: 0.5em, body-indent: 0.45em, spacing: st.leading * 0.95em, marker: [•])
+#set list(indent: 0.5em, body-indent: 0.45em, spacing: st.leading * 0.95em, marker: [\u{2022}])
 
 #let lnk(x) = if x.url == "" { x.text } else if st.underline { link(x.url, underline(offset: 1.6pt, stroke: 0.35pt, x.text)) } else { link(x.url, x.text) }
 #let links(xs) = xs.map(lnk).join("  |  ")

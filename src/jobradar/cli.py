@@ -22,7 +22,7 @@ from .salary import label as pay_label
 from .salary import short as pay_short
 from .salary import unit as pay_unit
 from .sources import MODULES, SLUG_SOURCES, Target, build_targets
-from .store import STATUSES, Store
+from .store import STATUSES, Store, status_label
 from .util import clean_block, clean_line, clip, today
 
 
@@ -38,16 +38,16 @@ def _print_table(rows: list[dict], store: Store) -> None:
               f"{clip(clean_line(r['title']), title_w):<{title_w}} "
               f"{clip(('* ' if r.get('rank_bonus') else '') + clean_line(r.get('location')), 22):<22} "
               f"{pay_short(r.get('salary')) or '-':<11} "
-              f"{posted_label(r):<8} {clean_line(r.get('status'))}")
+              f"{posted_label(r):<8} {status_label(r)}")
 
 
 def cmd_run(args, settings) -> int:
     stats = asyncio.run(pipeline.run(settings, use_ai=not args.no_ai, send=not args.no_notify,
                                      only=args.only, recheck=args.recheck, rescore=args.rescore))
     dropped = ", ".join(f"{k} {v}" for k, v in list(stats["dropped"].items())[:8])
-    print(f"\njobradar · {stats['date']}")
-    print(f"  boards     {stats['targets']} checked, {len(stats['errors'])} failed · {stats.get('requests', 0)} requests")
-    print(f"  postings   {stats['fetched']} listed → {stats['candidates']} unseen candidates → {stats['new']} new matches")
+    print(f"\njobradar {stats['date']}")
+    print(f"  boards     {stats['targets']} checked, {len(stats['errors'])} failed, {stats.get('requests', 0)} requests")
+    print(f"  postings   {stats['fetched']} listed -> {stats['candidates']} unseen candidates -> {stats['new']} new matches")
     if stats.get("by_source"):
         print("  platforms  " + ", ".join(f"{k} {v}" for k, v in stats["by_source"].items()))
     if stats.get("deferred"):
@@ -61,14 +61,20 @@ def cmd_run(args, settings) -> int:
     if isinstance(ai, dict):
         print(f"  AI         {ai['scored']}/{ai['pending']} scored with {', '.join(ai['models']) or '-'} "
               f"({ai['ineligible']} marked ineligible, {ai.get('calls', 0)} requests)"
-              + (f" · {len(ai['errors'])} batch errors: {clip(ai['errors'][-1], 120)}" if ai["errors"] else ""))
+              + (f"; {len(ai['errors'])} batch errors: {clip(ai['errors'][-1], 120)}" if ai["errors"] else ""))
     else:
         print(f"  AI         {ai}")
     if stats["closed"]:
-        print(f"  closed     {stats['closed']} tracked postings were taken down")
+        print(f"  closed     {stats['closed']} tracked postings closed or were taken down")
+    v = stats.get("verify")
+    if v and v.get("checked"):
+        print(f"  checked    {v['checked']} tracked jobs: {v['open']} still open, {v['closed']} closed, "
+              f"{v['unknown']} unclear")
+        for job_id, company, title, reason in v["closed_jobs"][:8]:
+            print(f"             #{job_id} {clip(clean_line(company), 20)} - {clip(clean_line(title), 40)}: {clean_line(reason)}")
     if isinstance(stats["notify"], dict) and stats["notify"].get("items"):
         sent = ", ".join(f"{k}: {v}" for k, v in stats["notify"].items() if k != "items")
-        print(f"  digest     {stats['notify']['items']} jobs · {sent}")
+        print(f"  digest     {stats['notify']['items']} jobs, {sent}")
     for label, err in sorted(stats["errors"].items()):
         print(f"  ! {clean_line(label)}: {clip(clean_line(err), 110)}")
     print(f"  report     {stats['reports'].get('html', 'not written (see errors above)')}")
@@ -97,7 +103,7 @@ def cmd_list(args, settings) -> int:
         return 0
     _print_table(rows[: args.limit], store)
     if len(rows) > args.limit:
-        print(f"… {len(rows) - args.limit} more (use --limit)")
+        print(f"... {len(rows) - args.limit} more (use --limit)")
     if any(r.get("rank_bonus") for r in rows[: args.limit]):
         print("* preferred location (profile.yaml locations.preferred, or remote): ranked higher, score unchanged")
     return 0
@@ -113,15 +119,26 @@ def cmd_show(args, settings) -> int:
     line = clean_line  # job text is from strangers: never print control characters or escape sequences
     print(f"#{rec['id']}  {line(rec['company'])} - {line(rec['title'])}")
     print(f"  {line(rec['url'])}")
-    print(f"  location {line(rec.get('location'))} · posted {rec.get('posted_at') or '?'} · source {line(rec['source'])} · "
-          f"status {line(rec.get('status'))}{' · CLOSED' if rec.get('closed') else ''}")
-    print(f"  pay {pay_label(rec.get('salary')) or 'not listed'} · "
+    print(f"  location {line(rec.get('location'))} | posted {rec.get('posted_at') or '?'} | source {line(rec['source'])} | "
+          f"status {status_label(rec)}{' | CLOSED' if rec.get('closed') else ''}")
+    if rec.get("closed"):
+        print(f"  closed: {line(rec.get('closed_reason') or 'no longer listed')}"
+              + (f" (since {rec['closed_on']})" if rec.get("closed_on") else ""))
+    elif rec.get("verified"):
+        v = rec["verified"]
+        print(f"  checked {v.get('on')}: {v.get('state')} ({line(v.get('reason'))})")
+    elif rec.get("source") == "unstop":
+        print("  open: Unstop's search lists it with registrations open"
+              + (f" until {rec['expires']}" if rec.get("expires") else ""))
+    else:
+        print("  not checked yet: run `jobradar check " + str(rec["id"]) + "` before applying")
+    print(f"  pay {pay_label(rec.get('salary')) or 'not listed'} | "
           f"{'preferred location' if rec.get('rank_bonus') else 'not a preferred location'}")
     print(f"  reviews {reviews_url(rec['company'])}")
-    print(f"  rule score {rec.get('rule_score')} · {line(', '.join(rec.get('signals') or [])) or '-'}")
+    print(f"  rule score {rec.get('rule_score')} | {line(', '.join(rec.get('signals') or [])) or '-'}")
     if ai:
-        print(f"  AI fit {ai.get('fit')} · {line(ai.get('verdict'))} · eligible {line(ai.get('eligible'))} · "
-              f"min years {ai.get('min_years')} · {line(ai.get('model'))}")
+        print(f"  AI fit {ai.get('fit')} | {line(ai.get('verdict'))} | eligible {line(ai.get('eligible'))} | "
+              f"min years {ai.get('min_years')} | {line(ai.get('model'))}")
         print(f"  why: {line(ai.get('why'))}")
         if ai.get("gaps"):
             print(f"  gaps: {line(', '.join(str(g) for g in ai['gaps']))}")
@@ -141,7 +158,7 @@ def cmd_mark(args, settings) -> int:
     for job_id in ids:
         try:
             rec = store.set_status(int(job_id), status, args.note)
-            print(f"#{rec['id']} {clean_line(rec['company'])} - {clean_line(rec['title'])} → {status}")
+            print(f"#{rec['id']} {clean_line(rec['company'])} - {clean_line(rec['title'])} -> {status}")
         except (KeyError, ValueError) as exc:
             print(f"#{job_id}: {exc}")
     store.save()
@@ -156,6 +173,18 @@ def cmd_draft(args, settings) -> int:
     if not rec:
         print(f"No job #{args.id}")
         return 1
+    if not args.force:
+        from . import liveness
+
+        asyncio.run(liveness.verify(store, settings.sources, [rec]))
+        store.save()
+        v = rec.get("verified") or {}
+        if rec.get("closed"):
+            print(f"#{rec['id']} {clean_line(rec['company'])} - {clean_line(rec['title'])} is closed: "
+                  f"{clean_line(rec.get('closed_reason') or v.get('reason'))}.\nNo kit made (add --force to make one anyway).")
+            return 1
+        if v.get("state") == "unknown":
+            print(f"Couldn't confirm the job is still open ({clean_line(v.get('reason'))}); check the link before applying.")
     key = None if args.no_ai else pipeline.gemini_key()
     parts = tuple(args.only or ("resume", "messages", "prep"))
     print(f"Application kit for #{rec['id']} {clean_line(rec['company'])} - {clean_line(rec['title'])}"
@@ -197,11 +226,11 @@ def cmd_probe(args, settings) -> int:
                         continue
                     local = sum(1 for j in jobs if rules.location_ok(j))
                     company = jobs[0].company if source != "smartrecruiters" else slug
-                    print(f"  {slug:<20} {source:<16} {len(jobs):>5} jobs · {local:>4} in your locations")
+                    print(f"  {slug:<20} {source:<16} {len(jobs):>5} jobs, {local:>4} in your locations")
                     found.append((source, slug, company))
         return found
 
-    print("Probing public job boards…")
+    print("Probing public job boards...")
     found = asyncio.run(go())
     if not found:
         print("Not found on Greenhouse / Lever / Ashby / SmartRecruiters / Workable under that slug.\n"
@@ -264,7 +293,7 @@ def cmd_doctor(args, settings) -> int:
     counts = {}
     for t in targets:
         counts[t.source] = counts.get(t.source, 0) + 1
-    print(f"sources   {len(targets)} boards · " + ", ".join(f"{k} {v}" for k, v in counts.items()))
+    print(f"sources   {len(targets)} boards: " + ", ".join(f"{k} {v}" for k, v in counts.items()))
     resume, source = resume_text(settings)
     print(f"resume    {source} ({len(resume)} chars)")
     if not source.startswith("profile.yaml"):
@@ -273,7 +302,7 @@ def cmd_doctor(args, settings) -> int:
         print(f"          sent to Gemini without: {'; '.join(redact(resume, settings.profile).removed) or 'nothing found'}"
               " (see `jobradar resume`)")
     store = Store(settings.store_path)
-    print(f"tracker   {len(store.jobs)} jobs tracked · last run {store.runs[-1]['date'] if store.runs else 'never'}")
+    print(f"tracker   {len(store.jobs)} jobs tracked, last run {store.runs[-1]['date'] if store.runs else 'never'}")
     import os
 
     for name in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "SMTP_USER", "SMTP_PASSWORD", "EMAIL_TO"):
@@ -298,7 +327,7 @@ def cmd_doctor(args, settings) -> int:
         gemini = Gemini(key, [m for m, ok in status if ok][:1], rpm=60)
         try:
             text, model = await gemini.generate("", "Reply with the single word OK.", max_tokens=256)
-            return f"key works · {model} replied {text.strip()[:20]!r}", status
+            return f"key works: {model} replied {text.strip()[:20]!r}", status
         except AIError as exc:
             return f"key valid but generation failed: {exc}", status
         finally:
@@ -374,6 +403,36 @@ def cmd_resume(args, settings) -> int:
         note(f"# ! {w}")
     note("")
     print(private.text)
+    return 0
+
+
+def cmd_check(args, settings) -> int:
+    from . import liveness
+
+    store = Store(settings.store_path)
+    if args.ids:
+        recs = [store.get(i) for i in args.ids]
+        missing = [i for i, r in zip(args.ids, recs) if r is None]
+        if missing:
+            print("No job " + ", ".join(f"#{i}" for i in missing))
+        recs = [r for r in recs if r is not None]
+    elif args.all:
+        recs = [r for r in store.all() if store.visible(r) and r.get("status") in ("new", "saved")]
+    else:
+        v = settings.profile.get("verify") or {}
+        recs = liveness.due(store, every_days=int(v.get("every_days", 3)), limit=int(v.get("per_run", 40)))
+    if not recs:
+        print("Nothing to check: every open job was checked recently (or pass ids: jobradar check 14 22).")
+        return 0
+    print(f"Checking {len(recs)} job(s) are still open...")
+    counts = asyncio.run(liveness.verify(store, settings.sources, recs))
+    store.save()
+    for rec in recs:
+        v = rec.get("verified") or {}
+        mark = {"open": "open   ", "closed": "CLOSED ", "unknown": "unclear"}.get(v.get("state"), "?")
+        print(f"  #{rec['id']:<5} {mark} {clip(clean_line(rec['company']), 22):<22} {clip(clean_line(rec['title']), 40):<40} "
+              f"{clean_line(v.get('reason'))}")
+    print(f"\n{counts['open']} open, {counts['closed']} closed (hidden from your lists now), {counts['unknown']} unclear")
     return 0
 
 
@@ -463,6 +522,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("id", type=int)
     p.add_argument("--no-ai", action="store_true", help="rules and templates only")
     p.add_argument("--only", nargs="+", choices=["resume", "messages", "prep"], help="make only these parts")
+    p.add_argument("--force", action="store_true", help="skip the still-open check, or make a kit for a closed job")
     p.set_defaults(fn=cmd_draft)
 
     p = sub.add_parser("probe", help="find which public job board a company uses")
@@ -478,6 +538,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--pdf", action="store_true", help="render profile/resume.yaml to data/resume/ to check it")
     p.add_argument("--check", action="store_true", help="flag wording recruiters read as AI-written or filler")
     p.set_defaults(fn=cmd_resume)
+
+    p = sub.add_parser("check", help="check tracked jobs are still open (not taken down, applications not closed)")
+    p.add_argument("ids", nargs="*", type=int, help="job ids (default: the jobs due for a check)")
+    p.add_argument("--all", action="store_true", help="every open job you haven't acted on")
+    p.set_defaults(fn=cmd_check)
 
     p = sub.add_parser("export", help="write every tracked job to a spreadsheet (data/jobs.xlsx)")
     p.add_argument("--out", help="where to save it (default data/jobs.xlsx)")

@@ -17,23 +17,23 @@ SOURCE = """Asha Verma
 +91 98765 43210 | asha.verma@example.com | Pune, Maharashtra
 linkedin.com/in/ashaverma | github.com/ashav
 Education
-Example Institute of Technology, Pune 2022 – 2026
+Example Institute of Technology, Pune 2022 \u2013 2026
 B.Tech in Computer Science and Engineering CGPA: 8.7 / 10
 Experience
 Acme Labs
-Software Intern Jan 2026 – Jun 2026
-• Built a REST API in Express.js and PostgreSQL for the internal billing dashboard.
-• Wrote Jest tests for the payment module.
+Software Intern Jan 2026 \u2013 Jun 2026
+\u2022 Built a REST API in Express.js and PostgreSQL for the internal billing dashboard.
+\u2022 Wrote Jest tests for the payment module.
 Projects
-ShopLite – E-commerce App Live | GitHub
+ShopLite \u2013 E-commerce App Live | GitHub
 React.js, Node.js, MongoDB
-• Built product search with MongoDB text indexes.
-• Added JWT login and role-based access.
+\u2022 Built product search with MongoDB text indexes.
+\u2022 Added JWT login and role-based access.
 Technical Skills
 Languages: JavaScript, Python, SQL
 Tools: Git, Docker
 Achievements
-• Won 2nd place in a 24-hour college hackathon.
+\u2022 Won 2nd place in a 24-hour college hackathon.
 """
 
 
@@ -45,13 +45,13 @@ def base_cv() -> dict:
                     [{"text": "github.com/ashav", "url": "https://github.com/ashav"}]],
         "summary": "",
         "education": [{"school": "Example Institute of Technology", "place": "Pune", "degree": "B.Tech in CSE",
-                       "dates": "2022 – 2026", "score": "CGPA: 8.7 / 10", "details": []}],
+                       "dates": "2022 \u2013 2026", "score": "CGPA: 8.7 / 10", "details": []}],
         "experience": [{"company": "Acme Labs", "place": "", "dates": "", "roles": [
-            {"title": "Software Intern", "dates": "Jan 2026 – Jun 2026", "place": "", "bullets": [
+            {"title": "Software Intern", "dates": "Jan 2026 \u2013 Jun 2026", "place": "", "bullets": [
                 "Built a REST API in Express.js and PostgreSQL for the internal billing dashboard.",
                 "Wrote Jest tests for the payment module."]}]}],
         "projects": [
-            {"name": "ShopLite – E-commerce App", "tech": "React.js, Node.js, MongoDB", "dates": "",
+            {"name": "ShopLite \u2013 E-commerce App", "tech": "React.js, Node.js, MongoDB", "dates": "",
              "links": [{"text": "GitHub", "url": "https://github.com/ashav/shoplite"}],
              "bullets": ["Built product search with MongoDB text indexes.", "Added JWT login and role-based access."]},
             {"name": "PyNotes", "tech": "Python, Flask", "dates": "", "links": [],
@@ -70,7 +70,7 @@ def base_cv() -> dict:
 def test_ai_tells_in_resume_bullets():
     assert any("stock phrases" in t for t in humanize.tells("Spearheaded a seamless migration", "resume"))
     assert any("tail" in t for t in humanize.tells("Built a cache, resulting in faster pages", "resume"))
-    assert any("em dash" in t for t in humanize.tells("Built a cache — fast", "resume"))
+    assert any("em dash" in t for t in humanize.tells("Built a cache \u2014 fast", "resume"))
     assert humanize.tells("Solved 300 dynamic programming problems and rotated API keys", "resume") == []
     assert humanize.tells("Built a REST API in Express.js for the billing dashboard.", "resume") == []
 
@@ -84,7 +84,7 @@ def test_ai_tells_in_messages():
     ok = "Hi [first name], I'm applying for the SDE role. I built a REST API in Express. Could you refer me?"
     assert humanize.tells(ok, "message") == []
     assert "leftover placeholder" in " ".join(humanize.tells("Hi [first name], I work at [Company].", "message"))
-    assert humanize.fix("Fast — and cheap!! 🚀 **really**") == "Fast, and cheap. really"
+    assert humanize.fix("Fast \u2014 and cheap!! \U0001F680 **really**") == "Fast, and cheap. really"
 
 
 def test_resume_notes_flag_repetition_not_content():
@@ -125,7 +125,7 @@ def test_apply_reorders_and_keeps_facts(base_cv):
         "keywords_have": ["Node.js"], "keywords_missing": ["Kubernetes"],
     }
     out, report = tailor.apply(base_cv, plan)
-    assert [p["name"] for p in out["projects"]] == ["PyNotes", "ShopLite – E-commerce App"]
+    assert [p["name"] for p in out["projects"]] == ["PyNotes", "ShopLite \u2013 E-commerce App"]
     assert out["projects"][1]["bullets"][0] == "Added JWT login and role-based access."
     assert out["skills"][0]["label"] == "Tools" and out["skills"][0]["items"] == ["Docker", "Git"]
     assert out["skills"][1]["items"] == ["JavaScript", "Python", "SQL"]  # "Rust" was added: order refused
@@ -157,10 +157,10 @@ def test_build_checks_every_line_and_fills_links_locally(profile):
     assert "asha.verma" not in private.text and "98765" not in private.text
     data = {
         "summary": "", "education": [], "experience": [{"company": "Acme Labs", "place": "", "dates": "", "roles": [
-            {"title": "Software Intern", "dates": "Jan 2026 – Jun 2026", "place": "", "bullets": [
+            {"title": "Software Intern", "dates": "Jan 2026 \u2013 Jun 2026", "place": "", "bullets": [
                 "Built a REST API in Express.js and PostgreSQL for the internal billing dashboard.",
                 "Wrote Jest tests for the payment module and improved coverage by 40%."]}]}],
-        "projects": [{"name": "ShopLite – E-commerce App", "tech": "React.js, Node.js, MongoDB", "dates": "",
+        "projects": [{"name": "ShopLite \u2013 E-commerce App", "tech": "React.js, Node.js, MongoDB", "dates": "",
                       "links": ["Live", "GitHub"], "bullets": ["Built product search with MongoDB text indexes."]}],
         "skills": [], "sections": [], "headings": {}, "order": ["experience", "projects"]}
     uris = ["mailto:asha.verma@example.com", "https://linkedin.com/in/ashaverma", "https://github.com/ashav",
@@ -513,9 +513,9 @@ def test_hand_edited_yaml_types_and_odd_characters(tmp_path, profile, base_cv):
 def test_setup_checks_names_dates_and_scores_too(profile):
     private = redact(SOURCE, dict(profile, name="Asha Verma"))
     data = {"summary": "", "experience": [{"company": "Acme Labs", "place": "", "dates": "", "roles": [
-                {"title": "Senior Software Engineer", "dates": "Jan 2024 – Jun 2026", "place": "", "bullets": []}]}],
+                {"title": "Senior Software Engineer", "dates": "Jan 2024 \u2013 Jun 2026", "place": "", "bullets": []}]}],
             "education": [{"school": "Example Institute of Technology", "place": "Pune", "degree": "B.Tech",
-                           "dates": "2022 – 2026", "score": "CGPA: 9.7 / 10", "details": []}],
+                           "dates": "2022 \u2013 2026", "score": "CGPA: 9.7 / 10", "details": []}],
             "projects": [], "skills": [{"label": "Languages", "items": ["JavaScript", "Rust"]}], "sections": [],
             "headings": {}, "order": []}
     _, warnings = cvmod.build(data, SOURCE, private, [])

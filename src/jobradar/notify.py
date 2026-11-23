@@ -38,8 +38,8 @@ def _line(rec: dict, store: Store) -> tuple[str, str]:
     plain = (f"#{rec['id']} {store.score_of(rec)}{tag} {company} - {title} "
              f"({where}{pay}, {posted_label(rec)})\n{url or '(link not shown: not an http(s) address)'}\n{reason}")
     link = (f"<a href=\"{html.escape(url, quote=True)}\">{html.escape(title)}</a>" if url else html.escape(title))
-    rich = (f"<b>#{rec['id']} · {store.score_of(rec)}{html.escape(tag)}</b> {html.escape(company)} - {link}\n"
-            f"<i>{html.escape(where)}{html.escape(pay.replace(',', ' ·', 1))} · {posted_label(rec)}</i>\n"
+    rich = (f"<b>#{rec['id']} | {store.score_of(rec)}{html.escape(tag)}</b> {html.escape(company)} - {link}\n"
+            f"<i>{html.escape(where)}{html.escape(pay.replace(',', ' |', 1))} | {posted_label(rec)}</i>\n"
             f"{html.escape(reason)}")
     return plain, rich
 
@@ -49,7 +49,7 @@ def build_digest(items: list[dict], store: Store, total_new: int) -> tuple[str, 
     lines = [_line(r, store) for r in items]
     plain = head + "\n\n" + "\n\n".join(p for p, _ in lines)
     rich = f"<b>{html.escape(head)}</b>\n\n" + "\n\n".join(r for _, r in lines)
-    footer = "\n\nMark progress: jobradar mark <id> applied   ·   Draft materials: jobradar draft <id>"
+    footer = "\n\nMark progress: jobradar mark <id> applied  |  Draft materials: jobradar draft <id>"
     return head, plain + footer, rich + html.escape(footer)
 
 

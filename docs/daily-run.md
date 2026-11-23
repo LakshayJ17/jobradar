@@ -25,7 +25,7 @@ day's tracker.
    git add -f config/profile.yaml && git commit -m "my profile" && git push
    ```
 
-3. **Add secrets** under **Settings → Secrets and variables → Actions**, or with the CLI:
+3. **Add secrets** under **Settings > Secrets and variables > Actions**, or with the CLI:
 
    ```bash
    gh secret set GEMINI_API_KEY                                   # paste the key when asked
@@ -38,7 +38,7 @@ day's tracker.
    you can start it from the Actions tab. Read the report at `data/reports/latest.md` on GitHub, or download the HTML
    report from the run's artifacts.
 
-Run `git pull` before `jobradar mark …` on your laptop so status changes merge cleanly, and `git pull upstream main`
+Run `git pull` before `jobradar mark ...` on your laptop so status changes merge cleanly, and `git pull upstream main`
 to get project updates.
 
 The workflow pins every action to an exact commit, keeps no push token on disk while jobs are fetched, and

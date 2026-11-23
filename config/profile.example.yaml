@@ -114,6 +114,13 @@ ai:
   batch_size: 6                   # jobs per request
   rpm: 10                         # stay under the free requests-per-minute limit
 
+# ---------------------------------------------------------------- checking jobs are still open
+# A link that loads isn't enough: pages stay up after applications close, or get taken down. Each run re-checks
+# tracked jobs from boards that can't prove a job is still open, and hides the closed ones (`jobradar check` too).
+verify:
+  per_run: 40                     # tracked jobs re-checked per run
+  every_days: 3                   # how often each job is re-checked
+
 # ---------------------------------------------------------------- application kit (`jobradar draft <id>`)
 # Tailored resumes are rendered from profile/resume.yaml (`jobradar resume --setup` makes it). Leave style empty for
 # the defaults: A4, 10pt New Computer Modern (the LaTeX resume look), bold headings.

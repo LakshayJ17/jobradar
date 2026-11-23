@@ -9,8 +9,8 @@ from jobradar.store import Store
 
 @pytest.mark.parametrize("text,want", [
     ("₹ 2,00,000 - 2,40,000 /year", [2.0, 2.4]),            # Internshala
-    ("₹8L – ₹15L • 0.01% – 1.0%", [8.0, 15.0]),              # Wellfound (pay, then equity)
-    ("$40k – $100k", [35.2, 88.0]),                          # USD, converted at the rough rate
+    ("₹8L \u2013 ₹15L \u2022 0.01% \u2013 1.0%", [8.0, 15.0]),              # Wellfound (pay, then equity)
+    ("$40k \u2013 $100k", [35.2, 88.0]),                          # USD, converted at the rough rate
     ("6-8 LPA", [6.0, 8.0]),
     ("CTC: 6 to 8 lakhs per annum", [6.0, 8.0]),
     ("Salary: 25,000 - 35,000 per month", [3.0, 4.2]),

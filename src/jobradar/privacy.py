@@ -39,7 +39,7 @@ _PHONE_LOOSE = re.compile(r"(?<![\w+])(?:\(?[6-9]\d{4}\)?[\s.-]?\d{5}|[6-9](?:[\
 _PAN = re.compile(r"\b[A-Z]{5}\d{4}[A-Z]\b")
 # "LinkedIn: priya-sharma-123", "GitHub - priyasharma": a profile handle written without its URL
 _LABELLED = re.compile(r"\b(linkedin|github|gitlab|leetcode|codeforces|codechef|kaggle|hackerrank|twitter|instagram|"
-                       r"telegram|medium|behance|dribbble|portfolio)(\s*(?:id|handle|username)?\s*[:\-–]\s*)"
+                       r"telegram|medium|behance|dribbble|portfolio)(\s*(?:id|handle|username)?\s*[:\-\u2013]\s*)"
                        r"(?!\[)([A-Za-z0-9][\w.-]{2,40})", re.I)
 _HANDLE = re.compile(r"(?<![\w.@/])@[A-Za-z0-9_]{3,30}(?![\w/@.])")
 _PERSONAL_SITE = re.compile(r"(?<![\w.@/-])[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:dev|me|online|site|tech|xyz|page|live|website|"
@@ -50,7 +50,7 @@ _PIN_LOOSE = re.compile(r"(?<=[A-Za-z])([,\s]\s?)([1-9]\d{2}\s?\d{3})(?![\d.%])"
 _ADDRESS = re.compile(r"\b(?:road|rd\.|marg|nagar|sector|street|lane|colony|apartments?|flat no|house no|h\.? ?no|"
                       r"block [a-z0-9]|phase [0-9ivx]+|district|tehsil|village|p\.?o\.? box)\b", re.I)
 _INVISIBLE = re.compile("[\u200b-\u200f\u2060-\u2064\ufeff\u00ad]")
-_PIN = re.compile(r"([,\-–]\s?)([1-9]\d{2}\s?\d{3})(?!\d)")  # "New Delhi - 110085"
+_PIN = re.compile(r"([,\-\u2013]\s?)([1-9]\d{2}\s?\d{3})(?!\d)")  # "New Delhi - 110085"
 _AADHAAR = re.compile(r"(?<![\d.])(?:\d{4}[\s.-]\d{4}[\s.-]\d{4}|[2-9]\d{11})(?![\d.])")
 # "Key: value" lines with personal details, common on Indian resumes, plus the closing declaration.
 _PERSONAL_LINE = re.compile(
@@ -58,7 +58,7 @@ _PERSONAL_LINE = re.compile(
     r"birth ?date|father'?s? name|mother'?s? name|marital status|nationality|religion|aadhaa?r|passport|"
     r"blood group|declaration\b|i hereby declare|born\b"
     r"|(?:age|gender|sex|caste|category|pan(?: no\.?| card| number)?|place|date|pin ?code|postal code|guardian|"
-    r"father|mother|hobbies|interests|languages known)\s*[:\-–])",
+    r"father|mother|hobbies|interests|languages known)\s*[:\-\u2013])",
     re.I)
 _HEADING = re.compile(
     r"^\W*(?:education(?:al)?(?: qualifications?| details| background)?|academics?|academic (?:details|profile)|"
@@ -127,7 +127,7 @@ def redact(text: str, profile: dict | None = None, *, header: bool = True, names
     for ln in [ln.strip() for ln in lines if ln.strip()][:3] if header else []:
         if _NOT_A_NAME.match(ln):
             continue
-        part = re.split(r"\s*(?:[|•·,]|\s[-–—]\s)\s*", ln)[0].strip()
+        part = re.split(r"\s*(?:[|\u2022\u00b7,]|\s[-\u2013\u2014]\s)\s*", ln)[0].strip()
         if _NAME_LINE.match(part) and len(part) <= 40 and not _HEADING.match(part):
             names.append(part)
         break
@@ -190,7 +190,7 @@ def redact(text: str, profile: dict | None = None, *, header: bool = True, names
             continue
         cleaned.append(scrub(ln).rstrip())
     if dropped_personal:
-        out.removed.append(f"{dropped_personal} personal-detail lines (address, DOB, family, declaration…)")
+        out.removed.append(f"{dropped_personal} personal-detail lines (address, DOB, family, declaration...)")
     kinds = sorted({re.sub(r"-\d+$", "", ph.strip("[]")).lower() for ph in out.values})
     if kinds:
         out.removed.append("replaced with placeholders: " + ", ".join(kinds))

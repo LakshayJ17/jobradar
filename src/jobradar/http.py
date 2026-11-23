@@ -321,7 +321,9 @@ class Http:
             path += "?" + parts.query
         return self._robots[host].allowed(path)
 
-    async def _checked(self, method: str, url: str, *, robots: bool, **kwargs) -> httpx.Response:
+    async def _checked(self, method: str, url: str, *, robots: bool, keep: tuple = (), **kwargs) -> httpx.Response:
+        """The response after checked redirects. keep: error statuses returned instead of raised (e.g. 404 when
+        checking whether a posting still exists). The final URL is response.request.url."""
         if robots and not await self.robots_allowed(url):
             raise Blocked(f"robots.txt disallows {url}")
         r = await self._send(method, url, **kwargs)
@@ -333,8 +335,18 @@ class Http:
             kwargs.pop("params", None)  # the Location already carries its query
             r = await self._send("GET", url, **kwargs)
             hops += 1
-        if r.status_code >= 400:
+        if r.status_code >= 400 and r.status_code not in keep:
             raise FetchError(f"HTTP {r.status_code} from {urlsplit(url).netloc}{urlsplit(url).path}")
+        return r
+
+    async def get_page(self, url: str, *, params: dict | None = None, robots: bool = True,
+                       accept: str = "text/html,application/xhtml+xml") -> httpx.Response:
+        """A page or API response where "gone" is an answer, not an error: 404 and 410 come back as responses.
+        Used to check that a posting is still open. Blocks, robots.txt and the no-fetch list still raise."""
+        r = await self._checked("GET", url, robots=robots, keep=(404, 410), params=params, headers={"Accept": accept})
+        if r.status_code == 200 and "html" in accept and len(r.text) < 20000 and _CHALLENGE_RX.search(r.text[:5000]):
+            self._strike(url)
+            raise Blocked(f"{urlsplit(url).netloc} answered with a bot challenge - not bypassing it")
         return r
 
     async def _json(self, method: str, url: str, *, robots: bool, **kwargs):

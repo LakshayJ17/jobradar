@@ -75,8 +75,9 @@ Rules:
 
 def _norm(text: str) -> str:
     """For 'is this bullet really in the resume?': case, whitespace, quotes, dashes and bullets don't matter."""
-    text = (text or "").lower().translate(str.maketrans({"’": "'", "‘": "'", "“": '"', "”": '"', "–": "-",
-                                                         "—": "-", "•": "", "●": "", "▪": "", "·": ""}))
+    text = (text or "").lower().translate(str.maketrans({"\u2019": "'", "\u2018": "'", "\u201c": '"', "\u201d": '"',
+                                                         "\u2013": "-", "\u2014": "-", "\u2022": "", "\u25cf": "",
+                                                         "\u25aa": "", "\u00b7": ""}))
     return re.sub(r"[\s\-]+", "", text)
 
 
@@ -133,7 +134,7 @@ def contact_from(text: str, uris: list[str]) -> tuple[str, list[list[dict]]]:
         if _PERSONAL_LINE.match(ln):
             continue
         items = [{"text": part, "url": _url_for(part, uris)}
-                 for part in (p.strip(" ,") for p in re.split(r"\s*[|•·◦]\s*|\s{3,}", ln)) if part]
+                 for part in (p.strip(" ,") for p in re.split(r"\s*[|\u2022\u00b7\u25e6]\s*|\s{3,}", ln)) if part]
         if items:
             out.append(items)
     return name, out

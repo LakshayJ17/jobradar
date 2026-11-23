@@ -94,6 +94,8 @@ async def fetch(http, target) -> list[Job]:
 async def enrich(http, job: Job) -> None:
     data = await http.get_json(job.detail["url"], robots=True)
     info = data.get("jobPostingInfo") or {}
+    if isinstance(info.get("canApply"), bool):
+        job.accepting = info["canApply"]  # False: still posted, no longer taking applications
     job.description = html_to_text(info.get("jobDescription"))
     locs = [x for x in [info.get("location"), *(info.get("additionalLocations") or [])] if x]
     if locs:

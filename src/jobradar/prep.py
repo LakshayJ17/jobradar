@@ -146,9 +146,9 @@ def render(data: dict, catalog: dict, rec: dict, gaps: list[str]) -> str:
                 out.append(f"_{md_text(t['why'])}_")
             out.append("")
             for r in topic.get("resources") or []:
-                lang = " (Hindi)" if r.get("lang") == "hi" else ""
+                kind = r.get("kind", "link") + (", Hindi" if r.get("lang") == "hi" else "")
                 note = f": {r['note']}" if r.get("note") else ""
-                out.append(f"- [{r.get('title')}]({r.get('url')}) · {r.get('kind', 'link')}{lang}{note}")
+                out.append(f"- [{r.get('title')}]({r.get('url')}) ({kind}){note}")
             out.append("")
     if data.get("revise"):
         out += ["## Revise first", ""] + [f"- {md_text(x)}" for x in data["revise"]] + [""]

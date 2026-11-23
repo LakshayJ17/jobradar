@@ -76,7 +76,7 @@ async def setup_cv(settings: Settings, gemini: Gemini, *, log=print) -> tuple[di
     if not path.exists():
         raise KitError("no resume file found in profile/: add your resume (.pdf, .txt or .md) first")
     private = redact(text, settings.profile)
-    log(f"reading {source} into profile/{cvmod.CV_FILE} (the AI sees it without your contact details)…")
+    log(f"reading {source} into profile/{cvmod.CV_FILE} (the AI sees it without your contact details)...")
     data, model = await cvmod.extract(private.text, gemini)
     cv, warnings = cvmod.build(data, text, private, cvmod.pdf_links(path))
     cvmod.save(cv, cv_path(settings), source)
@@ -126,7 +126,7 @@ async def _build(settings, rec, base, gemini, parts, log) -> Kit:
     if gemini:
         try:
             system = tailor.TAILOR_SYSTEM.format(max_rewrites=tailor.MAX_REWRITES, banned=_banned_sample())
-            log("planning the tailored resume…")
+            log("planning the tailored resume...")
             plan, model = await gemini.generate_json(system, f"{body_private.text}\n\n{_job_block(rec)}",
                                                      tailor.TAILOR_SCHEMA, max_tokens=8192, temperature=0.3,
                                                      patient=False)
@@ -199,7 +199,7 @@ async def _build(settings, rec, base, gemini, parts, log) -> Kit:
             try:
                 keys = list(catalog)
                 topic_list = "\n".join(f"- {k}: {catalog[k].get('title', k)}" for k in keys)
-                log("writing interview prep…")
+                log("writing interview prep...")
                 data, model = await gemini.generate_json(
                     prep.PREP_SYSTEM, f"{body_private.text}\n\nAllowed topic keys:\n{topic_list}\n\n{_job_block(rec)}",
                     prep.schema(keys), max_tokens=8192, temperature=0.4, patient=False)
@@ -309,7 +309,7 @@ def _fence(text: str) -> str:
 def render_kit(rec: dict, report: dict, msgs: dict, problems: dict, stem: str, parts, base_notes: list[str]) -> str:
     out = [f"# {md_text(rec['company'])}: {md_text(rec['title'])}", "",
            f"{safe_url(rec['url']) or 'not a web link'}  ",
-           f"{md_text(rec.get('location') or '')} · posted {posted_label(rec)} · tracker #{rec['id']}", "",
+           f"{md_text(rec.get('location') or '')} | posted {posted_label(rec)} | tracker #{rec['id']}", "",
            f"_Made {today().isoformat()}. Read every line before you upload or send anything: jobradar only knows "
            "your resume and the posting._", ""]
     out += ["## Files", ""]

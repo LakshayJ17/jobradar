@@ -1,6 +1,6 @@
 """Salary parsing and display.
 
-Sources give pay in many shapes: "₹ 2,00,000 - 2,40,000 /year" (Internshala), "₹8L – ₹15L" (Wellfound),
+Sources give pay in many shapes: "₹ 2,00,000 - 2,40,000 /year" (Internshala), "₹8L - ₹15L" (Wellfound),
 min/max fields per year or month (Unstop, Lever, remote boards), and free text such as "CTC: 6-8 LPA",
 "25,000 per month" or "$90k - $120k". Every amount is stored as yearly pay in one canonical unit, INR lakhs
 (LPA), as [min, max], or None when the posting doesn't say. That keeps the tracker comparable whatever the
@@ -31,8 +31,8 @@ def _token(i: int) -> str:
             rf"(?:\s*(?P<t{i}>{_TRAIL})(?![a-z]))?")
 
 
-# "6 - 8 LPA", "₹8L – ₹15L", "86,250 USD – 169,000 USD", and Shine's run-together "4.5L8L a year" / "8K12K a month"
-_RANGE = re.compile(_token(1) + r"(?:(?:\s*(?:-|to|–|—)\s*|(?<=[a-z]))" + _token(2) + ")?", re.I)
+# "6 - 8 LPA", "₹8L - ₹15L", "86,250 USD - 169,000 USD" (with any kind of dash), and Shine's run-together "4.5L8L a year" / "8K12K a month"
+_RANGE = re.compile(_token(1) + r"(?:(?:\s*(?:-|to|\u2013|\u2014)\s*|(?<=[a-z]))" + _token(2) + ")?", re.I)
 _MONTH = re.compile(r"month|/\s*mo\b|\bp\.?\s?m\.?\b|monthly", re.I)
 _HOUR = re.compile(r"hour|/\s*hr\b|hourly", re.I)
 _YEAR = re.compile(r"year|annum|annual|\bp\.?\s?a\.?\b|\byr\b|lpa|ctc", re.I)

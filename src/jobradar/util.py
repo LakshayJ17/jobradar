@@ -172,7 +172,7 @@ def days_ago(iso: str | None, ref: date | None = None) -> int | None:
 
 def clip(text: str, limit: int) -> str:
     text = text or ""
-    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+    return text if len(text) <= limit else text[: max(1, limit - 3)].rstrip() + "..."
 
 
 # ---------------------------------------------------------------------------- countries

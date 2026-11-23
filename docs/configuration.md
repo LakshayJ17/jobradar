@@ -25,6 +25,7 @@ shows what to change for anything else.
 | `locations.preferred`, `locations.groups` | Ranked higher (nothing is hidden); your own city groups | `[]`, `{}` |
 | `salary.currency`, `salary.min` | Currency pay is shown in, and the floor in it (LPA for INR, thousands a year otherwise) | `INR`, `0` (off) |
 | `ai.models`, `ai.draft_models` | Gemini free-tier models, tried in order | flash-lite models first |
+| `verify.per_run`, `verify.every_days` | Tracked jobs re-checked per run to confirm they're still open, and how often each is re-checked ([details](sources.md#checking-jobs-are-still-open)) | `40`, `3` |
 | `resume.style` | Look of tailored resumes (paper, font size, headings) | A4, 10 pt, bold headings |
 | `notify` | Digest size, minimum score, channels, spreadsheet attachment | 15 jobs, score 55+ |
 
@@ -53,7 +54,7 @@ salary:
   in `jobradar list`.
 - **Where pay comes from:** each platform's own pay field where it has one (Unstop, Wellfound, Lever, remote
   boards), the salary line on Internshala and Shine pages, and otherwise phrases in the description such as
-  "CTC: 6-8 LPA", "₹25,000/month" or "86,250 USD – 169,000 USD". A salary the employer hid stays unknown. Pay in
+  "CTC: 6-8 LPA", "₹25,000/month" or "86,250 USD - 169,000 USD". A salary the employer hid stays unknown. Pay in
   another currency is converted at a rough fixed rate, so every job can be compared with your floor.
 - **How the floor works:** a range counts if its top end reaches the floor, so "4-7 LPA" passes a floor of 6.
 - **Coverage:** in India only about 1 in 4 postings lists pay, and many large companies never do, which is why jobs

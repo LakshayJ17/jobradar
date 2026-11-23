@@ -6,7 +6,7 @@ import asyncio
 import os
 from collections import Counter
 
-from . import notify, sources
+from . import liveness, notify, sources
 from .ai import AuthError, Gemini, score_jobs
 from .config import Settings, resume_text
 from .filters import Rules
@@ -117,6 +117,11 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
                     rec = store.jobs.get(key)
                     if rec is not None and job.salary and not rec.get("salary"):
                         rec["salary"] = job.salary  # boards that started listing pay, or records from before
+                    if rec is not None and job.expires and job.expires != rec.get("expires"):
+                        rec["expires"] = job.expires  # deadlines move; close_expired reads this
+                    if rec is not None and job.accepting is False and not rec.get("closed"):
+                        store.close(rec, "the board says applications are closed")
+                        stats["closed"] += 1
                     continue
                 fill_salary(job, rules.currency)
                 reason = rules.prefilter(job)
@@ -150,7 +155,7 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
         deferred_keys = {j.key for j in fresh if j.needs_detail} - {j.key for j in need}
         fresh = [j for j in fresh if j.key not in deferred_keys]
         if need:
-            log(f"fetching details for {len(need)} new candidates…")
+            log(f"fetching details for {len(need)} new candidates...")
         failures = dict(zip((j.key for j in need), await asyncio.gather(*(enrich_one(j) for j in need))))
         detail_errors: dict[str, list] = {}
         for job in fresh:
@@ -173,7 +178,7 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
                 continue
             stats["new"] += 1
         stats["detail_errors"] = {k: {"count": v[0], "sample": v[1]} for k, v in detail_errors.items()}
-        stats["closed"] = store.close_missing(ok_boards, set(postings)) + store.close_expired()
+        stats["closed"] += store.close_missing(ok_boards, set(postings)) + store.close_expired()
         stats["requests"] = http.requests
     return stats
 
@@ -192,6 +197,14 @@ async def run(settings: Settings, *, use_ai: bool = True, send: bool = True, onl
     if hidden or restored:
         log(f"filters: {hidden} tracked jobs no longer fit profile.yaml (skipped), {restored} fit again (restored)")
 
+    vcfg = settings.profile.get("verify") or {}
+    stats["verify"] = None
+    if vcfg.get("enabled", True) and not only:
+        due = liveness.due(store, every_days=int(vcfg.get("every_days", 3)), limit=int(vcfg.get("per_run", 40)))
+        if due:
+            log(f"checking {len(due)} tracked jobs are still open...")
+            stats["verify"] = await liveness.verify(store, settings.sources, due, log=log)
+
     ai_cfg = settings.profile.get("ai") or {}
     stats["ai"] = "off"
     if use_ai and ai_cfg.get("enabled", True):
@@ -206,7 +219,7 @@ async def run(settings: Settings, *, use_ai: bool = True, send: bool = True, onl
                               and r.get("status") in ("new", "saved"))
                 if pending:
                     log(f"AI scoring up to {min(pending, int(ai_cfg.get('max_jobs_per_run', 80)))} jobs "
-                        f"(free tier, ~{60 // max(1, int(ai_cfg.get('rpm', 10)))}s between requests)…")
+                        f"(free tier, ~{60 // max(1, int(ai_cfg.get('rpm', 10)))}s between requests)...")
                 stats["ai"] = await score_jobs(store, settings.profile, gemini, resume, log=log)
                 stats["ai"]["calls"] = gemini.calls
             except AuthError as exc:

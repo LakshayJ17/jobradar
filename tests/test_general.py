@@ -77,7 +77,7 @@ def test_us_profile_locations_and_pay(usa, make_job):
     assert rules.prefilter(make_job(location="New York, NY", salary=salary.parse_text("$100k - $140k"))) is None
     assert salary.in_description("Base salary: 120,000 - 150,000 per year.", "USD") == salary.parse_text("$120k-$150k")
     # formats seen on real US postings (NVIDIA, Amazon): currency after the amount, pay far from the word "salary"
-    nvidia = "The expected base salary ranges for this position are: 86,250 USD – 169,000 USD for Level 2."
+    nvidia = "The expected base salary ranges for this position are: 86,250 USD \u2013 169,000 USD for Level 2."
     assert salary.label(salary.in_description(nvidia, "USD"), "USD") == "$86k-169k"
     amazon_text = "Learn more about benefits.\n\nUSA, CA, Cupertino - 165,200.00 - 223,400.00 USD annually"
     assert salary.label(salary.in_description(amazon_text, "USD"), "USD") == "$165k-223k"

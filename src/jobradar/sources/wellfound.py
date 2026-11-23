@@ -50,7 +50,8 @@ def parse_page(page: str) -> list[Job]:
                 posted_at=date_from_epoch(jl.get("liveStartAt")), description="\n\n".join(p for p in parts if p),
                 employment_type=jl.get("jobType") or "",
                 level_hint="entry_level" if jl.get("yearsExperienceMin") == 0 else "",
-                salary=parse_text(str(jl.get("compensation") or "").split("•")[0]),
+                # compensation reads "<pay> <bullet> <equity>": the pay is the part before the bullet
+                salary=parse_text(str(jl.get("compensation") or "").split("\u2022")[0]),
             ))
     return jobs
 

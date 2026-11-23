@@ -16,8 +16,8 @@ Languages: Python, Java, C++, SQL
 Frameworks: FastAPI, React, Node.js, ASP.NET, socket.io, Pandas
 
 PROJECTS
-Multi-agent CI tool | Python, LangGraph - https://github.com/rahulsharma/resurge
-- Cut review time by 40% across 1,200 PRs; call 987-654-3210 for a demo
+Expense tracker | Python, Flask - https://github.com/rahulsharma/expense-tracker
+- Cut report time by 40% across 1,200 receipts; call 987-654-3210 for a demo
 Portfolio: rahul.vercel.app
 
 PERSONAL DETAILS
@@ -43,7 +43,7 @@ def test_redact_removes_personal_details_and_keeps_what_matching_needs():
                    "hereby", "Hindi"):
         assert secret not in r.text, secret
     for kept in ("2022 - 2026", "CGPA: 8.52/10", "92.4%", "Python, Java, C++, SQL", "Node.js", "ASP.NET",
-                 "socket.io", "Pandas", "40% across 1,200 PRs", "Multi-agent CI tool", "XYZ Institute",
+                 "socket.io", "Pandas", "40% across 1,200 receipts", "Expense tracker", "XYZ Institute",
                  "EDUCATION", "PROJECTS"):
         assert kept in r.text, kept
     assert r.text.startswith("Contact: [EMAIL] | [LINKEDIN] | [GITHUB] | [PHONE]\nEDUCATION")
@@ -57,7 +57,7 @@ def test_restore_puts_real_values_back_locally():
     draft = "Hi, I'm [NAME]. [PHONE] / [EMAIL]\n[GITHUB-2] [GITHUB] [UNKNOWN]"
     out = r.restore(draft)
     assert out == ("Hi, I'm Rahul Kumar Sharma. +91 98765 43210 / rahul.sharma2026@gmail.com\n"
-                   "https://github.com/rahulsharma/resurge github.com/rahulsharma [UNKNOWN]")
+                   "https://github.com/rahulsharma/expense-tracker github.com/rahulsharma [UNKNOWN]")
 
 
 def test_redact_without_headings_or_with_profile_name():
@@ -129,6 +129,6 @@ def test_redaction_catches_odd_formats(text, secret):
 
 def test_redaction_leaves_ordinary_resume_text_alone():
     text = ("Experience\nBuilt REST APIs with Node.js, Next.js and Socket.io; deployed on AWS EC2.\n"
-            "Solved 450+ problems. CGPA: 8.7 / 10, 2022 – 2026. Percentage: 87.8%\n"
+            "Solved 450+ problems. CGPA: 8.7 / 10, 2022 \u2013 2026. Percentage: 82.4%\n"
             "Interned at Amazon.com, worked on ASP.NET; used @nestjs/core and React 18.2.0. 6-9 LPA, 2 years.")
     assert redact(text, {}).text == text

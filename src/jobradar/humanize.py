@@ -89,7 +89,7 @@ _WHITELIST = _rx(WHITELIST)
 
 
 def _clean(text: str) -> str:
-    return _WHITELIST.sub(" ", (text or "").replace("’", "'"))
+    return _WHITELIST.sub(" ", (text or "").replace("\u2019", "'"))
 
 
 def stock_phrases(text: str, kind: str = "resume") -> tuple[list[str], list[str]]:
@@ -122,7 +122,7 @@ def tells(text: str, kind: str = "message") -> list[str]:
     piled = [w for w in dict.fromkeys(sometimes) if sometimes.count(w) > 1]
     if piled or len(sometimes) > (1 if kind == "resume" else 2):
         out.append("filler words pile up: " + ", ".join(f'"{w}"' for w in dict.fromkeys(sometimes)))
-    if "—" in text or re.search(r"\w – \w", text) or " -- " in text:
+    if "\u2014" in text or re.search(r"\w \u2013 \w", text) or " -- " in text:
         out.append("em dash")
     if _EMOJI.search(text):
         out.append("emoji")
@@ -170,8 +170,8 @@ def fix(text: str) -> str:
     from .util import clean_block
 
     text = clean_block(text).strip()
-    text = re.sub(r"\s*—\s*", ", ", text)                 # "X — Y" -> "X, Y"
-    text = re.sub(r"(?<=[a-z]) – (?=[a-z])", ", ", text)    # spaced en dash used as a pause (not in "2022 – 2026")
+    text = re.sub(r"\s*\u2014\s*", ", ", text)               # an em dash between words becomes a comma
+    text = re.sub(r"(?<=[a-z]) \u2013 (?=[a-z])", ", ", text)  # so does a spaced en dash between words (not in dates)
     text = re.sub(r"\s+--\s+", ", ", text)
     text = _EMOJI.sub("", text)
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
@@ -201,7 +201,7 @@ def resume_notes(bullets: list[str]) -> list[str]:
         notes.append(f'{len(tails)} bullets end with ", resulting in / ensuring ...": a common AI pattern')
     if any(PRONOUN.search(b) for b in bullets):
         notes.append("drop I / my / we from bullets")
-    if any("—" in b for b in bullets):
+    if any("\u2014" in b for b in bullets):
         notes.append("em dashes: use commas or a plain hyphen")
     long = [b for b in bullets if len(b.split()) > 30]
     if long:

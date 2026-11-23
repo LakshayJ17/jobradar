@@ -10,14 +10,14 @@ from urllib.parse import quote_plus
 
 from .salary import in_units, unit
 from .salary import label as pay_label
-from .store import Store
+from .store import Store, status_label
 from .util import clean_line, clip, days_ago, safe_url, today
 
 
 def why(rec: dict) -> str:
     ai = rec.get("ai") or {}
     if ai.get("why"):
-        gaps = f" · gaps: {', '.join(ai['gaps'])}" if ai.get("gaps") else ""
+        gaps = f"; gaps: {', '.join(ai['gaps'])}" if ai.get("gaps") else ""
         return ai["why"] + gaps
     return "; ".join(rec.get("signals") or [])
 
@@ -67,7 +67,7 @@ def _md_table(rows: list[dict]) -> str:
             id=r["id"], score=score_label(r), company=_md_cell(r["company"]), title=_md_link(r["title"], r["url"]),
             loc=_md_cell(clip(r.get("location") or "", 40)),
             pay=pay_label(r.get("salary")) or "-",
-            posted=posted_label(r), status=_md_cell(r.get("status", "new")), why=_md_cell(clip(why(r), 140))))
+            posted=posted_label(r), status=_md_cell(status_label(r)), why=_md_cell(clip(why(r), 140))))
     return "\n".join(lines)
 
 
@@ -76,7 +76,7 @@ def render_markdown(store: Store, stats: dict) -> str:
     new = [r for r in visible if r.get("first_seen") == today().isoformat()]
     active = [r for r in store.ranked() if r.get("status") in ("saved", "applied", "oa", "interview", "offer")]
     parts = [f"# jobradar - {today().isoformat()}", "",
-             f"{len(new)} new matches today · {len(visible)} open matches · {len(active)} in progress · "
+             f"{len(new)} new matches today, {len(visible)} open matches, {len(active)} in progress, "
              f"{stats.get('fetched', 0)} postings checked across {stats.get('targets', 0)} boards", ""]
     if new:
         parts += [f"## New today ({len(new)})", "", _md_table(new[:40]), ""]
@@ -132,7 +132,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}a{color:var(--accent
 </style></head><body>
 <header><h1>jobradar</h1><div class="sub" id="sub"></div></header>
 <div class="controls">
-<input type="search" id="q" placeholder="Search company, role, location, skills…">
+<input type="search" id="q" placeholder="Search company, role, location, skills">
 <select id="verdict"><option value="">Any verdict</option><option value="apply">AI: apply</option><option value="maybe">AI: maybe</option><option value="unscored">Not AI-scored</option></select>
 <select id="status"><option value="">Any status</option></select>
 <label><input type="checkbox" id="onlynew"> new today</label>
@@ -176,13 +176,13 @@ def render_html(store: Store, stats: dict) -> str:
             "verdict": ai.get("verdict", ""),
             "eligible": ai.get("eligible", ""), "company": r["company"], "title": r["title"], "url": url,
             "location": clip(r.get("location") or "", 60), "posted": r.get("posted_at") or "",
-            "posted_label": posted_label(r), "status": r.get("status", "new"), "why": clip(why(r), 260),
+            "posted_label": posted_label(r), "status": status_label(r), "why": clip(why(r), 260),
             "visible": store.visible(r), "is_new": r.get("first_seen") == today_iso,
             "search": " ".join([r["company"], r["title"], r.get("location") or "", why(r)]).lower(),
         })
     visible = sum(1 for j in jobs if j["visible"])
     new = sum(1 for j in jobs if j["visible"] and j["is_new"])
-    summary = (f"{today_iso} · {new} new today · {visible} open matches · "
+    summary = (f"{today_iso}: {new} new today, {visible} open matches, "
                f"{stats.get('fetched', 0)} postings checked across {stats.get('targets', 0)} boards")
     # Valid JSON that can't end the <script> element or open an HTML comment: <, > and & as \\u escapes.
     data = json.dumps({"summary": summary, "jobs": jobs}, ensure_ascii=False)

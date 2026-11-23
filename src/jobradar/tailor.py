@@ -95,7 +95,7 @@ def _bullet_lists(cv: dict) -> dict[str, list]:
 
 
 def entry_names(cv: dict) -> dict[str, str]:
-    """{entry id: readable name} for the change list: 'Ethara AI, Software Developer', a project, a section."""
+    """{entry id: readable name} for the change list: 'Acme Labs, Software Intern', a project, a section."""
     out = {}
     for i, e in enumerate(cv.get("experience") or []):
         for j, role in enumerate(e.get("roles") or []):
@@ -226,8 +226,8 @@ def _stem(word: str) -> str:
 
 def _number_pairs(text: str) -> set[tuple[str, str]]:
     """(number, the word right after it): '24-hour' -> ('24', 'hour'), '10+ components' -> ('10', '+')."""
-    return {(m.group(1).replace(",", ""), (m.group(2) or "").lower().lstrip("-– "))
-            for m in re.finditer(r"(\d+(?:[.,]\d+)*)\s*([-–]?\s*[A-Za-z%+]+)?", text or "")}
+    return {(m.group(1).replace(",", ""), (m.group(2) or "").lower().lstrip("-\u2013 "))
+            for m in re.finditer(r"(\d+(?:[.,]\d+)*)\s*([-\u2013]?\s*[A-Za-z%+]+)?", text or "")}
 
 
 def _plural_of(word: str, vocab: set[str]) -> bool:

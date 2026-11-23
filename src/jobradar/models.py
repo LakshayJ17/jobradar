@@ -29,6 +29,7 @@ class Job:
     department: str = ""
     level_hint: str = ""  # e.g. SmartRecruiters experienceLevel, Amazon "university"
     salary: list[float] | None = None  # yearly [min, max] in INR lakhs (canonical); shown in your currency
+    accepting: bool | None = None  # the board says applications are open (True) / closed (False); None: not said
     needs_detail: bool = False  # description must be fetched separately (Workday, Eightfold, ...)
     detail: dict = field(default_factory=dict, repr=False)
 

@@ -17,7 +17,7 @@ _NUM = r"(\d{1,2}|zero|one|two|three|four|five|six|seven|eight|nine|ten)"
 # Each optional part owns its trailing whitespace ("\s*(?:\+\s*)?", never "\s*\+?\s*"), so a long run of spaces
 # can't be split between two \s* in every possible way (that was quadratic on hostile descriptions).
 _YEARS_RX = re.compile(
-    rf"\b{_NUM}\s*(?:(?:\+|plus)\s*)?(?:(?:-|–|—|to)\s*{_NUM}\s*(?:\+\s*)?)?(?:years?|yrs?)(?:'s)?\b", re.I)
+    rf"\b{_NUM}\s*(?:(?:\+|plus)\s*)?(?:(?:-|\u2013|\u2014|to)\s*{_NUM}\s*(?:\+\s*)?)?(?:years?|yrs?)(?:'s)?\b", re.I)
 _EXPERIENCE_RX = re.compile(r"experience|expertise|\bexp\b|work(?:ing)? (?:in|on|with)|industry|professional"
                             r"|hands[- ]on|proven|track record", re.I)
 _NOT_EXPERIENCE_RX = re.compile(r"^\W*(?:old|of age|ago|in business|degree|program|course|bachelor|b\.?tech|warranty"
@@ -59,12 +59,12 @@ def _city_rx(words: list, groups: dict | None = None) -> re.Pattern | None:
 
 _FRESHER_RX = re.compile(
     r"new grad|fresh(?:er|ers| graduate)|entry[- ]level|early[- ]career|recent(?:ly)? graduat|university grad"
-    r"|campus|no (?:prior )?experience (?:is )?required|0\s*(?:-|–|to)\s*[12]\s*(?:years?|yrs?)"
+    r"|campus|no (?:prior )?experience (?:is )?required|0\s*(?:-|\u2013|to)\s*[12]\s*(?:years?|yrs?)"
     r"|graduate (?:program|engineer|trainee)|trainee", re.I)
 # "*+" (possessive): a long "2020/2021/..." list is read once, never re-split while searching for "batch".
 _BATCH_RX = re.compile(
-    r"((?:20\d\d\s*(?:/|,|&|and|or|-|–)\s*)*+20\d\d)\s*(?:batch|pass[- ]?outs?|graduat\w*|campus|grads?\b|new grad)"
-    r"|(?:batch|class)\s*(?:of\s*)?((?:20\d\d\s*(?:/|,|&|and|or|-|–)\s*)*+20\d\d)"
+    r"((?:20\d\d\s*(?:/|,|&|and|or|-|\u2013)\s*)*+20\d\d)\s*(?:batch|pass[- ]?outs?|graduat\w*|campus|grads?\b|new grad)"
+    r"|(?:batch|class)\s*(?:of\s*)?((?:20\d\d\s*(?:/|,|&|and|or|-|\u2013)\s*)*+20\d\d)"
     r"|graduat\w*\s+(?:in|by)\s+((?:20\d\d\s*(?:/|,|&|and|or)\s*)*+20\d\d)", re.I)
 TEXT_LIMIT = 20_000  # characters of a description the rules read; real postings are far shorter
 
@@ -189,6 +189,8 @@ class Rules:
 
     def prefilter(self, job: Job, *, ignore_age: bool = False) -> str | None:
         """Reason to drop the job, or None to keep it."""
+        if job.accepting is False:
+            return "applications-closed"
         title = job.title or ""
         # scraped listings often only know the location after the job page is read (checked again in postfilter)
         if not (job.needs_detail and not job.location) and not self.location_ok(job):
@@ -215,6 +217,8 @@ class Rules:
 
     # ------------------------------------------------------------ stage 2: needs the description
     def postfilter(self, job: Job, *, ignore_age: bool = False) -> str | None:
+        if job.accepting is False:  # the detail page can say so too (Workday canApply)
+            return "applications-closed"
         text = _readable(job.description)
         if not ignore_age and self._too_old(job):  # detail pages can carry a more accurate (older) posting date
             return "too-old"
@@ -276,5 +280,5 @@ class Rules:
         age = days_ago(job.posted_at)
         if age is not None and age <= 3:
             score += 4
-            signals.append("posted ≤3d ago")
+            signals.append("posted in the last 3 days")
         return min(score, 100), signals, years

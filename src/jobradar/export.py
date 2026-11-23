@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .report import posted_label, reviews_url, why
 from .salary import in_units, unit
-from .store import Store
+from .store import Store, status_label
 from .util import safe_url, today
 
 CELL_LIMIT = 32_000   # Excel refuses cells over 32,767 characters
@@ -29,7 +29,8 @@ def _row(rec: dict, store: Store) -> list:
     ai = rec.get("ai") or {}
     pay = in_units(rec.get("salary"))
     verdict = "ineligible" if ai.get("eligible") == "no" else ai.get("verdict", "")
-    status = rec.get("status", "new") + (" (closed)" if rec.get("closed") else "")
+    status = status_label(rec) + (f" (closed: {rec['closed_reason']})" if rec.get("closed") and rec.get("closed_reason")
+                                  else " (closed)" if rec.get("closed") else "")
     return [rec["id"], store.score_of(rec), verdict, rec["company"], rec["title"], rec.get("location") or "",
             "yes" if rec.get("rank_bonus") else "", round(pay[0], 1) if pay else None,
             round(pay[1], 1) if pay else None, unit() if pay else "", rec.get("posted_at") or "",

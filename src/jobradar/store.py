@@ -27,6 +27,23 @@ def _clean(rec: dict) -> dict:
     return rec
 
 
+FRESH_SEEN_DAYS = 3     # "new" while first seen this recently...
+FRESH_POSTED_DAYS = 7   # ...and posted this recently (or the board doesn't say)
+
+
+def status_label(rec: dict) -> str:
+    """The status to show. Stored "new" only means "you haven't acted on it"; once a job is no longer fresh it shows as
+    "to review", so "new" always means a recent posting."""
+    from .util import days_ago
+
+    status = rec.get("status") or "new"
+    if status != "new":
+        return status
+    seen, posted = days_ago(rec.get("first_seen")), days_ago(rec.get("posted_at"))
+    fresh = seen is not None and seen <= FRESH_SEEN_DAYS and (posted is None or posted <= FRESH_POSTED_DAYS)
+    return "new" if fresh else "to review"
+
+
 class Store:
     def __init__(self, path: Path) -> None:
         self.path = path
@@ -108,9 +125,15 @@ class Store:
         for key, rec in self.jobs.items():
             board = f"{rec['source']}:{rec['board']}"
             if board in fetched_boards and key not in seen_keys and not rec.get("closed"):
-                rec["closed"] = True
+                self.close(rec, "no longer on the company's job board")
                 closed += 1
         return closed
+
+    @staticmethod
+    def close(rec: dict, reason: str) -> None:
+        rec["closed"] = True
+        rec["closed_reason"] = reason
+        rec["closed_on"] = today().isoformat()
 
     def close_expired(self, stale_days: int = STALE_AFTER_DAYS) -> int:
         """Close jobs whose board-provided expiry date has passed, and jobs no board has listed for a month (boards
@@ -120,8 +143,11 @@ class Store:
         for rec in self.jobs.values():
             if rec.get("closed"):
                 continue
-            if (rec.get("expires") and rec["expires"] < now) or (rec.get("last_seen") or now) < stale:
-                rec["closed"] = True
+            if rec.get("expires") and rec["expires"] < now:
+                self.close(rec, f"its closing date ({rec['expires']}) has passed")
+                closed += 1
+            elif (rec.get("last_seen") or now) < stale:
+                self.close(rec, f"no board has listed it for {stale_days} days")
                 closed += 1
         return closed
 

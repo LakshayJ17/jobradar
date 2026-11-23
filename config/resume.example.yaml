@@ -10,7 +10,7 @@ contact:                      # one list per line, shown centred under your name
     - {text: github.com/you, url: "https://github.com/you"}
 summary: ""                   # optional; most freshers leave it out
 education:
-  - {school: Your University, place: City, degree: B.Tech in Computer Science and Engineering, dates: "2022 – 2026",
+  - {school: Your University, place: City, degree: B.Tech in Computer Science and Engineering, dates: "2022 - 2026",
      score: "CGPA: 8.5 / 10", details: []}
 experience:                   # newest first; a company with two roles (intern, then full-time) lists both
   - company: Company Name
@@ -18,7 +18,7 @@ experience:                   # newest first; a company with two roles (intern, 
     dates: ""
     roles:
       - title: Software Engineering Intern
-        dates: "Jan 2026 – Jun 2026"
+        dates: "Jan 2026 - Jun 2026"
         place: ""
         bullets:
           - Built a REST API in Express.js and PostgreSQL for the internal billing dashboard.
