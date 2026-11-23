@@ -53,7 +53,8 @@ def parse_posting(p: dict, target, country: str = "") -> Job:
     )
 
 
-async def _collect(http, target, body: dict, jobs: dict, *, country: str, max_pages: int) -> None:
+async def _collect(http, target, body: dict, jobs: dict, *, country: str, max_pages: int) -> bool:
+    """Fetch pages into jobs. True when the whole result set was read (not cut off by max_pages)."""
     total = None
     offset = 0
     for _ in range(max_pages):
@@ -66,7 +67,8 @@ async def _collect(http, target, body: dict, jobs: dict, *, country: str, max_pa
             jobs.setdefault(job.native_id, job)
         offset += PAGE
         if not posts or offset >= total:
-            break
+            return True
+    return False
 
 
 async def fetch(http, target) -> list[Job]:
@@ -79,16 +81,18 @@ async def fetch(http, target) -> list[Job]:
     jobs: dict[str, Job] = {}
     if facet:
         param, value_id = facet
-        await _collect(http, target, {"appliedFacets": {param: [value_id]}, "searchText": ""}, jobs,
-                       country=country, max_pages=MAX_PAGES_COUNTRY)
+        whole = await _collect(http, target, {"appliedFacets": {param: [value_id]}, "searchText": ""}, jobs,
+                               country=country, max_pages=MAX_PAGES_COUNTRY)
+        target.opts["_partial"] = not whole  # a cut-off listing can't tell us which jobs closed
     else:  # no country facet on this tenant: search a few role keywords, filter location later
         for query in target.opts.get("queries") or FALLBACK_QUERIES:
             await _collect(http, target, {"appliedFacets": {}, "searchText": query}, jobs, country="", max_pages=10)
+        target.opts["_partial"] = True  # keyword searches never cover the whole board
     return list(jobs.values())
 
 
 async def enrich(http, job: Job) -> None:
-    data = await http.get_json(job.detail["url"])
+    data = await http.get_json(job.detail["url"], robots=True)
     info = data.get("jobPostingInfo") or {}
     job.description = html_to_text(info.get("jobDescription"))
     locs = [x for x in [info.get("location"), *(info.get("additionalLocations") or [])] if x]

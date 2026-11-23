@@ -18,13 +18,19 @@ dependencies = [
     "httpx>=0.27",
     "pyyaml>=6.0",
     "pypdf>=4.0",
+    "openpyxl>=3.1",
+    "typst>=0.13",
+    "python-docx>=1.1",
 ]
 
 [project.scripts]
 jobradar = "jobradar.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "markdown-it-py>=4.3.0",
+    "pytest>=8",
+]
 
 [build-system]
 requires = ["hatchling"]

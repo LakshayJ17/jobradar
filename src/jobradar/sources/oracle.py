@@ -78,7 +78,7 @@ async def fetch(http, target) -> list[Job]:
 
 
 async def enrich(http, job: Job) -> None:
-    data = await http.get_json(job.detail["url"], params=job.detail["params"])
+    data = await http.get_json(job.detail["url"], params=job.detail["params"], robots=True)
     d = (data.get("items") or [{}])[0]
     parts = [html_to_text(d.get(k)) for k in ("ExternalDescriptionStr", "ExternalResponsibilitiesStr",
                                                "ExternalQualificationsStr")]

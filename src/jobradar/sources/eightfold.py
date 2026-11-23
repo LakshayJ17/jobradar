@@ -6,6 +6,7 @@ from ..http import Blocked
 from ..models import Job
 from ..util import country_name, date_from_epoch, html_to_text
 
+COMPLETE_LISTING = False  # keyword searches, a few pages each - not the whole board
 MAX_PAGES = 8  # results are sorted newest first; 8 pages x 10 per query is plenty for a 30-day window
 DEFAULT_QUERIES = ("software engineer", "machine learning")
 
@@ -51,7 +52,7 @@ async def fetch(http, target) -> list[Job]:
 
 
 async def enrich(http, job: Job) -> None:
-    data = await http.get_json(job.detail["url"], params=job.detail["params"])
+    data = await http.get_json(job.detail["url"], params=job.detail["params"], robots=True)
     d = data.get("data") or {}
     job.description = html_to_text(d.get("jobDescription"))
     job.url = d.get("publicUrl") or job.url

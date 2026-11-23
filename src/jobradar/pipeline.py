@@ -14,6 +14,7 @@ from .http import Http
 from .models import Job
 from .privacy import redact
 from .salary import in_description
+from .export import write_xlsx
 from .report import render_markdown, write_reports
 from .store import Store
 from .util import today
@@ -68,6 +69,11 @@ def gemini_key() -> str | None:
     return os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or None
 
 
+BOARD_DEADLINE = 600   # seconds for one board's whole listing (Workday tenants page slowly, politely)
+DETAIL_DEADLINE = 120  # seconds for one job's detail page, retries included
+MAX_PER_BOARD = 3000   # postings read from one board per run
+
+
 async def collect(settings: Settings, store: Store, *, only: list[str] | None = None, log=print) -> dict:
     rules = Rules(settings.profile)
     targets = sources.localize(sources.build_targets(settings.sources, only),
@@ -79,7 +85,9 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
     async with Http() as http:
         async def fetch_one(t):
             try:
-                return t, await sources.fetch(http, t), None
+                return t, await asyncio.wait_for(sources.fetch(http, t), BOARD_DEADLINE), None
+            except asyncio.TimeoutError:
+                return t, [], f"took over {BOARD_DEADLINE // 60} minutes, skipped this run"
             except Exception as exc:  # one broken board must never stop the run
                 return t, [], f"{type(exc).__name__}: {exc}"[:220]
 
@@ -90,8 +98,12 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
             if err:
                 stats["errors"][target.label] = err
                 continue
-            if sources.complete_listing(target.source):
+            if sources.complete_listing(target.source) and not target.opts.get("_partial"):
                 ok_boards.add(target.label)  # only full listings can tell us a job was taken down
+            if len(jobs) > MAX_PER_BOARD:  # no board lists this many real jobs: don't let one flood the tracker
+                stats["errors"][target.label] = f"listed {len(jobs)} jobs; only the first {MAX_PER_BOARD} were read"
+                jobs = jobs[:MAX_PER_BOARD]
+                ok_boards.discard(target.label)
             stats["by_source"][target.source] += len(jobs)
             for job in jobs:
                 postings.setdefault(job.key, job)
@@ -99,14 +111,19 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
 
         fresh = []
         for key, job in postings.items():
-            if store.has(key):
-                store.touch(key)
-                rec = store.jobs.get(key)
-                if rec is not None and job.salary and not rec.get("salary"):
-                    rec["salary"] = job.salary  # boards that started listing pay, or records from before pay was read
+            try:
+                if store.has(key):
+                    store.touch(key)
+                    rec = store.jobs.get(key)
+                    if rec is not None and job.salary and not rec.get("salary"):
+                        rec["salary"] = job.salary  # boards that started listing pay, or records from before
+                    continue
+                fill_salary(job, rules.currency)
+                reason = rules.prefilter(job)
+            except Exception as exc:  # noqa: BLE001 - one malformed posting must not stop the run
+                stats["dropped"]["unreadable"] += 1
+                stats["errors"].setdefault(f"posting {job.source}:{job.board}", f"{type(exc).__name__}: {exc}"[:160])
                 continue
-            fill_salary(job, rules.currency)
-            reason = rules.prefilter(job)
             if reason:
                 stats["dropped"][reason] += 1
             else:
@@ -115,8 +132,10 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
 
         async def enrich_one(job):
             try:
-                await sources.enrich(http, job)
+                await asyncio.wait_for(sources.enrich(http, job), DETAIL_DEADLINE)
                 return None
+            except asyncio.TimeoutError:
+                return f"detail page took over {DETAIL_DEADLINE}s"
             except Exception as exc:
                 return f"{type(exc).__name__}: {exc}"[:160]
 
@@ -139,14 +158,19 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
                 entry = detail_errors.setdefault(job.source, [0, failures[job.key]])
                 entry[0] += 1  # not stored, so retried next run
                 continue
-            fill_salary(job, rules.currency)
-            reason = rules.postfilter(job)
-            if reason:
-                store.reject(job.key, reason)
-                stats["dropped"][reason.split("-")[0] if reason.startswith("batch") else reason] += 1
+            try:
+                fill_salary(job, rules.currency)
+                reason = rules.postfilter(job)
+                if reason:
+                    store.reject(job.key, reason)
+                    stats["dropped"][reason.split("-")[0] if reason.startswith("batch") else reason] += 1
+                    continue
+                score, signals, years = rules.score(job)
+                store.add(job, rule_score=score, signals=signals, min_years=years)["rank_bonus"] = rules.rank_bonus(job)
+            except Exception as exc:  # noqa: BLE001 - one malformed posting must not stop the run
+                stats["dropped"]["unreadable"] += 1
+                stats["errors"].setdefault(f"posting {job.source}:{job.board}", f"{type(exc).__name__}: {exc}"[:160])
                 continue
-            score, signals, years = rules.score(job)
-            store.add(job, rule_score=score, signals=signals, min_years=years)["rank_bonus"] = rules.rank_bonus(job)
             stats["new"] += 1
         stats["detail_errors"] = {k: {"count": v[0], "sample": v[1]} for k, v in detail_errors.items()}
         stats["closed"] = store.close_missing(ok_boards, set(postings)) + store.close_expired()
@@ -194,8 +218,23 @@ async def run(settings: Settings, *, use_ai: bool = True, send: bool = True, onl
     stats["by_source"] = dict(stats["by_source"].most_common())
     store.record_run({k: v for k, v in stats.items() if k in ("date", "targets", "fetched", "candidates", "new",
                                                               "closed", "requests")} | {"errors": len(stats["errors"])})
-    stats["notify"] = notify.deliver(store, settings.profile.get("notify") or {}, stats["new"]) if send else "off"
-    store.save()
-    stats["reports"] = write_reports(store, stats, settings.reports_dir, settings.data_dir / "jobs.csv")
+    store.save()  # first: nothing below (reports, spreadsheet, delivery) can lose today's tracker
+    stats["reports"] = {}
+    for name, step in (("reports", lambda: write_reports(store, stats, settings.reports_dir,
+                                                         settings.data_dir / "jobs.csv")),
+                       ("xlsx", lambda: {"xlsx": write_xlsx(store, settings.data_dir / "jobs.xlsx")})):
+        try:
+            stats["reports"].update(step())
+        except Exception as exc:  # noqa: BLE001 - one broken output must not stop the others
+            stats["errors"][f"writing {name}"] = f"{type(exc).__name__}: {exc}"
+    if send:
+        try:
+            stats["notify"] = notify.deliver(store, settings.profile.get("notify") or {}, stats["new"],
+                                             spreadsheet=stats["reports"].get("xlsx"))
+        except Exception as exc:  # noqa: BLE001
+            stats["notify"] = f"failed ({type(exc).__name__})"
+        store.save()  # records which jobs were sent
+    else:
+        stats["notify"] = "off"
     notify.github_summary(render_markdown(store, stats))
     return stats

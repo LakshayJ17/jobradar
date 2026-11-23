@@ -7,13 +7,24 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-from .models import Job
-from .util import today
+from .models import _LINE_FIELDS, Job
+from .util import clean_block, clean_line, today
 
 STATUSES = ("new", "saved", "applied", "oa", "interview", "offer", "rejected", "skipped")
 TOUCHED = {"saved", "applied", "oa", "interview", "offer", "rejected"}  # never auto-pruned
 DESCRIPTION_LIMIT = 4000
 PRUNE_AFTER_DAYS = 45
+STALE_AFTER_DAYS = 30
+
+
+def _clean(rec: dict) -> dict:
+    """Same cleaning as new jobs get (models.Job), for records stored before it existed or edited by hand."""
+    for name in _LINE_FIELDS:
+        if isinstance(rec.get(name), str):
+            rec[name] = clean_line(rec[name])
+    if isinstance(rec.get("description"), str):
+        rec["description"] = clean_block(rec["description"])
+    return rec
 
 
 class Store:
@@ -25,7 +36,7 @@ class Store:
         self.next_id = 1
         if path.exists():
             raw = json.loads(path.read_text(encoding="utf-8"))
-            self.jobs = {j["key"]: j for j in raw.get("jobs", [])}
+            self.jobs = {j["key"]: _clean(j) for j in raw.get("jobs", [])}
             self.rejected = raw.get("rejected", {})
             self.runs = raw.get("runs", [])
             self.next_id = raw.get("next_id", max((j["id"] for j in self.jobs.values()), default=0) + 1)
@@ -68,7 +79,7 @@ class Store:
             "remote": job.remote, "posted_at": job.posted_at, "expires": job.expires,
             "employment_type": job.employment_type, "salary": job.salary,
             "department": job.department, "level_hint": job.level_hint,
-            "description": (job.description or "")[:DESCRIPTION_LIMIT],
+            "description": clean_block(job.description)[:DESCRIPTION_LIMIT],
             "first_seen": now, "last_seen": now, "closed": False,
             "rule_score": rule_score, "signals": signals, "min_years": min_years,
             "ai": None, "status": "new", "status_updated": now, "notes": "", "notified": False,
@@ -101,11 +112,15 @@ class Store:
                 closed += 1
         return closed
 
-    def close_expired(self) -> int:
-        """Close jobs whose board-provided expiry date has passed."""
+    def close_expired(self, stale_days: int = STALE_AFTER_DAYS) -> int:
+        """Close jobs whose board-provided expiry date has passed, and jobs no board has listed for a month (boards
+        read only in part, like keyword searches, can't say a job closed, so this is their safety net)."""
         now, closed = today().isoformat(), 0
+        stale = (today() - timedelta(days=stale_days)).isoformat()
         for rec in self.jobs.values():
-            if rec.get("expires") and rec["expires"] < now and not rec.get("closed"):
+            if rec.get("closed"):
+                continue
+            if (rec.get("expires") and rec["expires"] < now) or (rec.get("last_seen") or now) < stale:
                 rec["closed"] = True
                 closed += 1
         return closed

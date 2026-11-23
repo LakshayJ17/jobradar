@@ -16,7 +16,6 @@ COMPLETE_LISTING = False  # first pages only (robots.txt disallows paging)
 RESULTS = "https://www.google.com/about/careers/applications/jobs/results"
 DEFAULT_QUERIES = ("", "software engineer", "software developer", "machine learning", "data", "site reliability",
                    "front end", "back end", "cloud", "security")
-_DATA_RX = re.compile(r"AF_initDataCallback\(\{key: 'ds:1'.*?data:(\[.*?\]), sideChannel", re.S)
 
 
 def _at(row, *path, default=None):
@@ -34,10 +33,12 @@ def slugify(text: str) -> str:
 
 def parse_page(page: str, level: str = "") -> tuple[list[Job], int, int]:
     """(jobs, total results, page size) from one results page."""
-    m = _DATA_RX.search(page)
-    if not m:
+    start = page.find("AF_initDataCallback({key: 'ds:1'")  # plain string search: linear on any page
+    begin = page.find("data:[", start) if start >= 0 else -1
+    end = page.find("], sideChannel", begin) if begin >= 0 else -1
+    if end < 0:
         raise FetchError("Google Careers page layout changed (job data block not found)")
-    data = json.loads(m.group(1))
+    data = json.loads(page[begin + len("data:"): end + 1])
     rows = _at(data, 0, default=[])
     total = _at(data, 2, default=len(rows))
     size = _at(data, 3, default=20) or 20

@@ -1,6 +1,9 @@
 # ---- yours: personal files that never go into the repo (see README "What stays private")
 .env
+.env.*
+!.env.example
 config/profile.yaml
+config/profile.yml
 profile/*
 !profile/.gitkeep
 !profile/README.md

@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from pathlib import Path
 from urllib.parse import quote_plus
 
 from .salary import in_units, unit
 from .salary import label as pay_label
 from .store import Store
-from .util import clip, days_ago, today
+from .util import clean_line, clip, days_ago, safe_url, today
 
 
 def why(rec: dict) -> str:
@@ -41,19 +42,32 @@ def score_label(rec: dict) -> str:
     return f"{rec.get('rule_score', 0)} (rules)"
 
 
+_MD_SPECIAL = re.compile(r"([\\`*_\[\]!|#~])")
+
+
 def _md_cell(text: str) -> str:
-    return (text or "").replace("|", "\\|").replace("\n", " ")
+    """Job text in a markdown table cell (also shown as the GitHub Actions run summary): no HTML, no links or
+    images of its own, no table breakouts, one line."""
+    text = clean_line(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return _MD_SPECIAL.sub(r"\\\1", text)
+
+
+def _md_link(title: str, url: str) -> str:
+    url = safe_url(url)
+    if not url:
+        return _md_cell(title)
+    return f"[{_md_cell(title)}](<{url.replace('>', '%3E').replace('<', '%3C')}>)"
 
 
 def _md_table(rows: list[dict]) -> str:
     lines = ["| ID | Score | Company | Role | Location | Pay | Posted | Status | Why |",
              "|---:|---|---|---|---|---|---|---|---|"]
     for r in rows:
-        lines.append("| {id} | {score} | {company} | [{title}]({url}) | {loc} | {pay} | {posted} | {status} | {why} |".format(
-            id=r["id"], score=score_label(r), company=_md_cell(r["company"]), title=_md_cell(r["title"]),
-            url=r["url"].replace(")", "%29"), loc=_md_cell(clip(r.get("location") or "", 40)),
+        lines.append("| {id} | {score} | {company} | {title} | {loc} | {pay} | {posted} | {status} | {why} |".format(
+            id=r["id"], score=score_label(r), company=_md_cell(r["company"]), title=_md_link(r["title"], r["url"]),
+            loc=_md_cell(clip(r.get("location") or "", 40)),
             pay=pay_label(r.get("salary")) or "-",
-            posted=posted_label(r), status=r.get("status", "new"), why=_md_cell(clip(why(r), 140))))
+            posted=posted_label(r), status=_md_cell(r.get("status", "new")), why=_md_cell(clip(why(r), 140))))
     return "\n".join(lines)
 
 
@@ -71,7 +85,7 @@ def render_markdown(store: Store, stats: dict) -> str:
     parts += [f"## All open matches ({len(visible)})", "", _md_table(visible[:200]), ""]
     if stats.get("errors"):
         parts += ["<details><summary>Boards that failed this run</summary>", ""]
-        parts += [f"- `{k}`: {_md_cell(v)}" for k, v in sorted(stats["errors"].items())]
+        parts += [f"- {_md_cell(k)}: {_md_cell(v)}" for k, v in sorted(stats["errors"].items())]
         parts += ["", "</details>", ""]
     return "\n".join(parts)
 
@@ -79,7 +93,7 @@ def render_markdown(store: Store, stats: dict) -> str:
 def write_csv(store: Store, path: Path) -> None:
     def safe(value) -> str:  # stop spreadsheet formula injection from job text
         s = "" if value is None else str(value)
-        return "'" + s if s[:1] in ("=", "+", "-", "@", "\t", "\r") else s
+        return "'" + s if s.lstrip(" \t\r\n")[:1] in ("=", "+", "-", "@") or s[:1] in ("\t", "\r") else s
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as fh:
@@ -154,7 +168,7 @@ def render_html(store: Store, stats: dict) -> str:
     jobs = []
     for r in store.ranked():
         ai = r.get("ai") or {}
-        url = r["url"] if r["url"].startswith(("https://", "http://")) else "#"
+        url = safe_url(r["url"]) or "#"
         jobs.append({
             "id": r["id"], "score": store.score_of(r), "rank": store.score_of(r) + (r.get("rank_bonus") or 0),
             "pref": bool(r.get("rank_bonus")), "pay": pay_label(r.get("salary")),
@@ -170,8 +184,9 @@ def render_html(store: Store, stats: dict) -> str:
     new = sum(1 for j in jobs if j["visible"] and j["is_new"])
     summary = (f"{today_iso} · {new} new today · {visible} open matches · "
                f"{stats.get('fetched', 0)} postings checked across {stats.get('targets', 0)} boards")
+    # Valid JSON that can't end the <script> element or open an HTML comment: <, > and & as \\u escapes.
     data = json.dumps({"summary": summary, "jobs": jobs}, ensure_ascii=False)
-    data = data.replace("</", "<\\/").replace("<!--", "<\\!--")
+    data = data.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     return HTML_TEMPLATE.replace("__DATA__", data)
 
 

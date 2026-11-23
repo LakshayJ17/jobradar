@@ -205,3 +205,51 @@ def test_rippling_list_and_job_page():
                     "createdOn": "2026-11-12T07:10:25.704000-08:00"}}}}}) + "</script>")
     info = rippling.parse_job_page(page)
     assert info["description"].startswith("Build APIs") and info["posted_at"] == "2026-11-12"
+
+
+def test_pages_without_jobposting_data_use_the_page_fallback():
+    import asyncio
+
+    from jobradar.models import Job
+    from jobradar.sources import jsonld
+
+    page = """<html><script type="application/ld+json">{"@type": "BreadcrumbList"}</script>
+    <div class="heading_4_5 profile"> Junior Software Developer </div>
+    <div class="heading_6 company_name"><a href="/company/x">DK Wealth</a></div>
+    <p id="location_names"><i class="ic-16-map-pin"></i><span><a>Thane</a>, <a>Mumbai</a></span></p>
+    <div class="status status-small status-inactive"><i class="ic-16-reschedule"></i>Posted 2 weeks ago</div>
+    <span>CTC (ANNUAL) </span></div><div class="item_body salary"><span>₹ 2,16,000 - 2,40,000</span><span>/year</span>
+    <div class="internship_details"><h2>About the job</h2><div class="text-container">Build Flutter apps. 0-1 years.
+    </div><h3>Skill(s) required</h3><span>Android</span></div>
+    <div class="text-container about_company_text_container">We are a wealth company.</div></html>"""
+    spec = {"title": ['class="heading_4_5 profile">', "</div>"], "company": ['class="heading_6 company_name">', "</div>"],
+            "location": ['id="location_names">', "</p>"],
+            "description": ['class="internship_details">', "about_company_text_container"],
+            "posted": ['ic-16-reschedule"></i>', "</div>"]}
+
+    class FakeHttp:
+        async def get_html(self, url):
+            return page
+
+    job = Job(source="scrape", board="internshala", company="Internshala", native_id="/job/1", title="hint",
+              url="https://internshala.com/job/detail/x", needs_detail=True,
+              detail={"url": "https://internshala.com/job/detail/x", "page_fallback": spec,
+                      "salary_label": r"CTC \(ANNUAL\)"})
+    asyncio.run(jsonld.enrich(FakeHttp(), job))
+    assert (job.title, job.company, job.location) == ("Junior Software Developer", "DK Wealth", "Thane, Mumbai")
+    assert "Build Flutter apps" in job.description and "wealth company" not in job.description
+    assert job.salary == [2.16, 2.4] and job.posted_at
+    job.detail.pop("page_fallback")
+    with pytest.raises(ValueError, match="no JobPosting"):
+        asyncio.run(jsonld.enrich(FakeHttp(), job))
+
+
+@pytest.mark.parametrize("text,days", [("Posted 2 weeks ago", 14), ("Posted today", 0), ("3 days ago", 3),
+                                       ("Posted a month ago", 30), ("Posted yesterday", 1), ("Posted recently", None)])
+def test_date_from_ago(text, days):
+    from datetime import date, timedelta
+
+    from jobradar.util import date_from_ago
+
+    ref = date(2026, 11, 23)
+    assert date_from_ago(text, ref) == (None if days is None else (ref - timedelta(days=days)).isoformat())

@@ -11,6 +11,7 @@ from ..util import country_code, date_from_text, html_to_text, with_country
 
 API = "https://www.amazon.jobs/en/search.json"
 PAGE = 100
+COMPLETE_LISTING = False  # keyword searches, a few pages each - not the whole board
 MAX_PAGES = 4
 DEFAULT_QUERIES = ("software development engineer", "machine learning")
 

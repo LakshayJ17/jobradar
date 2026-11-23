@@ -43,6 +43,8 @@ async def fetch(http, target) -> list[Job]:
         offset += PAGE
         if not content or offset >= (data.get("totalFound") or 0):
             break
+    else:
+        target.opts["_partial"] = True  # stopped at MAX_JOBS: the rest of the board wasn't read
     return jobs
 
 

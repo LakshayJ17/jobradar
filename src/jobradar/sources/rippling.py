@@ -5,13 +5,14 @@ from __future__ import annotations
 
 import json
 import re
+from urllib.parse import urlsplit
 
 from ..models import Job
-from ..util import date_from_iso, html_to_text
+from ..util import date_from_iso, html_to_text, tag_blocks
 
 COMPLETE_LISTING = True
 API = "https://api.rippling.com/platform/api/ats/v1/board/{board}/jobs"
-_NEXT_RX = re.compile(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
+_NEXT_OPEN = re.compile(r'<script id="__NEXT_DATA__"[^>]{0,400}>')
 
 
 def parse(rows: list, board: str, name: str) -> list[Job]:
@@ -29,10 +30,10 @@ def parse(rows: list, board: str, name: str) -> list[Job]:
 
 
 def parse_job_page(page: str) -> dict:
-    m = _NEXT_RX.search(page)
+    m = next((inner for _, inner in tag_blocks(page, _NEXT_OPEN, "</script>")), None)
     if not m:
         raise ValueError("no embedded job data on the Rippling page")
-    post = ((((json.loads(m.group(1)).get("props") or {}).get("pageProps") or {}).get("apiData") or {})
+    post = ((((json.loads(m).get("props") or {}).get("pageProps") or {}).get("apiData") or {})
             .get("jobPost") or {})
     desc = post.get("description")
     if isinstance(desc, dict):  # e.g. {"company": "<html>", "role": "<html>"} - role first
@@ -47,6 +48,9 @@ async def fetch(http, target) -> list[Job]:
 
 
 async def enrich(http, job: Job) -> None:
-    info = parse_job_page(await http.get_html(job.detail["url"]))
+    url = str(job.detail.get("url") or "")
+    if urlsplit(url).scheme != "https" or urlsplit(url).hostname != "ats.rippling.com":
+        raise ValueError("job link is not on ats.rippling.com: not fetched")  # the API's url field is not trusted
+    info = parse_job_page(await http.get_html(url))
     job.description = info["description"]
     job.posted_at = info["posted_at"] or job.posted_at

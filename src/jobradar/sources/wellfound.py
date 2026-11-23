@@ -10,20 +10,20 @@ import re
 from ..http import FetchError
 from ..models import Job
 from ..salary import parse_text
-from ..util import country_name, date_from_epoch
+from ..util import country_name, date_from_epoch, tag_blocks
 
 COMPLETE_LISTING = False
 BASE = "https://wellfound.com"
 DEFAULT_ROLES = ("software-engineer", "full-stack-engineer", "backend-engineer", "machine-learning-engineer",
                  "data-scientist")
-_NEXT_RX = re.compile(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
+_NEXT_OPEN = re.compile(r'<script id="__NEXT_DATA__"[^>]{0,400}>')
 
 
 def parse_page(page: str) -> list[Job]:
-    m = _NEXT_RX.search(page)
+    m = next((inner for _, inner in tag_blocks(page, _NEXT_OPEN, "</script>")), None)
     if not m:
         raise FetchError("Wellfound page has no embedded data (layout changed or blocked)")
-    state = (((json.loads(m.group(1)).get("props") or {}).get("pageProps") or {}).get("apolloState") or {}).get("data") or {}
+    state = (((json.loads(m).get("props") or {}).get("pageProps") or {}).get("apolloState") or {}).get("data") or {}
     jobs = []
     for key, startup in state.items():
         if not key.startswith("Startup") or not isinstance(startup, dict):

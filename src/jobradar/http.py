@@ -2,6 +2,11 @@
 
 * robots.txt (RFC 9309, longest-match) is checked before every scrape / career-site request
 * NOFETCH_DOMAINS: sites whose terms of service forbid automated access - never fetched, whatever the config says
+* redirects are followed by hand (at most 5), and every hop is checked again: http(s) only, the no-fetch list,
+  robots.txt when the first request needed it or the host changes, and never into private / loopback / link-local
+  addresses (a hostile board can't point us at your router or a cloud metadata service). POSTs are not redirected.
+* every response is capped at 20 MB after decompression (no gzip bombs) and every request has a 60 s deadline,
+  however slowly the server drips bytes
 * rate-limit buckets: parallelism + minimum spacing per site (Workday tenants share one budget)
 * circuit breaker: two blocking answers (403/429/503 or a bot challenge) and the site is skipped for the run
 * no proxies, no browser impersonation, no CAPTCHA solving - an honest User-Agent, always
@@ -10,15 +15,20 @@
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import random
 import re
-from urllib.parse import urlsplit
+import socket
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 
 USER_AGENT = "jobradar/0.1 (personal job-search tool; low volume)"
 AGENT_TOKEN = "jobradar"
 RETRY_STATUS = {429, 500, 502, 503, 504}
+MAX_BYTES = 20_000_000      # decoded body; job APIs and pages are far smaller
+REQUEST_DEADLINE = 60.0     # seconds for one request, body included
+MAX_REDIRECTS = 5
 BLOCKING_STATUS = {401, 403, 429, 451, 503}
 
 # Terms of service forbid scraping / automated access (checked 2026-11-17), or the site walls off
@@ -52,7 +62,10 @@ BUCKET_LIMITS = {
     "wellfound.com": (1, 3.0),
     "unstop.com": (1, 1.0),
 }
-_CHALLENGE_RX = re.compile(r"cf-chl|challenge-platform|just a moment\.\.\.|captcha|access denied|are you a robot", re.I)
+# Interstitial pages that stand in for the content (Cloudflare, "are you a robot"). Not just any page that mentions a
+# CAPTCHA: job pages talk about access and captchas too.
+_CHALLENGE_RX = re.compile(r"cf-chl|/cdn-cgi/challenge-platform|<title>\s*(?:just a moment|attention required|access "
+                           r"denied)|verify (?:that )?you(?: are|'re) (?:a )?human|are you a robot", re.I)
 
 
 class FetchError(Exception):
@@ -67,8 +80,16 @@ def bucket_of(host: str) -> str:
     return next((name for suffix, name in BUCKET_SUFFIXES.items() if host.endswith(suffix)), host)
 
 
+def host_of(url: str) -> str:
+    """The real host: no userinfo ("x@linkedin.com"), port or trailing dot ("linkedin.com.")."""
+    try:
+        return (httpx.URL(url).host or "").rstrip(".").lower()
+    except (httpx.InvalidURL, TypeError, ValueError):
+        return ""
+
+
 def nofetch_reason(url: str) -> str | None:
-    host = urlsplit(url).netloc.lower().split(":")[0]
+    host = host_of(url)
     for domain, reason in NOFETCH_DOMAINS.items():
         if host == domain or host.endswith("." + domain):
             return reason
@@ -100,16 +121,35 @@ class Robots:
                 in_agents = False
         if agents or rules:
             groups.append((agents, rules))
-        mine = [r for a, r in groups if any(x != "*" and x and x in agent.lower() for x in a)]
+        mine = [r for a, r in groups if agent.lower() in a]  # RFC 9309: the product token, case-insensitive
         star = [r for a, r in groups if "*" in a]
         self.rules = [rule for group in (mine or star) for rule in group]
 
     @staticmethod
     def _matches(pattern: str, path: str) -> bool:
-        rx = "^" + re.escape(pattern).replace(r"\*", ".*")
-        if rx.endswith(r"\$"):
-            rx = rx[:-2] + "$"
-        return re.match(rx, path) is not None
+        """Prefix match with * wildcards and a final $, without regex backtracking (a hostile robots.txt full of
+        stars can't stall the run): classic glob matching, O(len(pattern) * len(path)) at worst."""
+        pattern = re.sub(r"\*+", "*", pattern[:512])
+        anchored = pattern.endswith("$")
+        if anchored:
+            pattern = pattern[:-1]
+        if not anchored:
+            pattern += "*"
+        p = t = 0
+        star, mark = -1, 0
+        while t < len(path):
+            if p < len(pattern) and pattern[p] != "*" and pattern[p] == path[t]:
+                p, t = p + 1, t + 1
+            elif p < len(pattern) and pattern[p] == "*":
+                star, mark, p = p, t, p + 1
+            elif star >= 0:
+                p, mark = star + 1, mark + 1
+                t = mark
+            else:
+                return False
+        while p < len(pattern) and pattern[p] == "*":
+            p += 1
+        return p == len(pattern)
 
     def allowed(self, path: str) -> bool:
         best_len, best_allow = -1, True
@@ -128,7 +168,7 @@ class Http:
         self.client = httpx.AsyncClient(
             timeout=timeout,
             headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
-            follow_redirects=True,
+            follow_redirects=False,  # followed by hand in _checked, so every hop is checked
             transport=transport,
         )
         self._total = asyncio.Semaphore(total)
@@ -138,6 +178,7 @@ class Http:
         self._robots: dict[str, Robots] = {}
         self._robots_locks: dict[str, asyncio.Lock] = {}
         self._strikes: dict[str, int] = {}
+        self._public: dict[str, bool] = {}
         self.requests = 0
 
     async def __aenter__(self) -> "Http":
@@ -184,7 +225,9 @@ class Http:
                 await self._space(bucket)
                 self.requests += 1
                 try:
-                    response = await self.client.request(method, url, **kwargs)
+                    response = await asyncio.wait_for(self._fetch(method, url, **kwargs), REQUEST_DEADLINE)
+                except asyncio.TimeoutError:
+                    raise FetchError(f"{urlsplit(url).netloc} took over {REQUEST_DEADLINE:.0f}s") from None
                 except httpx.TransportError:
                     if attempt >= retries:
                         raise
@@ -200,6 +243,52 @@ class Http:
             backoff *= 2
         raise FetchError(f"gave up on {url}")  # pragma: no cover - loop always returns or raises
 
+    async def _fetch(self, method: str, url: str, **kwargs) -> httpx.Response:
+        """One request, body read with a size cap (counted after decompression)."""
+        request = self.client.build_request(method, url, **kwargs)
+        response = await self.client.send(request, stream=True)
+        try:
+            body, size = [], 0
+            async for chunk in response.aiter_bytes():
+                size += len(chunk)
+                if size > MAX_BYTES:
+                    raise FetchError(f"{urlsplit(url).netloc} sent more than {MAX_BYTES // 1_000_000} MB")
+                body.append(chunk)
+        finally:
+            await response.aclose()
+        headers = [(k, v) for k, v in response.headers.multi_items()
+                   if k.lower() not in ("content-encoding", "content-length", "transfer-encoding")]
+        return httpx.Response(response.status_code, headers=headers, content=b"".join(body), request=request)
+
+    async def _public_host(self, host: str) -> bool:
+        """False for hosts that are, or resolve to, private / loopback / link-local / reserved addresses."""
+        if host not in self._public:
+            try:
+                addrs = [ipaddress.ip_address(host)]
+            except ValueError:
+                try:
+                    infos = await asyncio.get_running_loop().getaddrinfo(host, None, type=socket.SOCK_STREAM)
+                    addrs = [ipaddress.ip_address(i[4][0].split("%")[0]) for i in infos]
+                except (OSError, ValueError):
+                    addrs = []
+            self._public[host] = bool(addrs) and all(a.is_global and not a.is_multicast for a in addrs)
+        return self._public[host]
+
+    async def _redirect_target(self, response: httpx.Response, current: str, *, robots: bool) -> str:
+        """Where a redirect points, after the same checks the first URL got (and a few more)."""
+        location = response.headers.get("location", "")
+        target = urljoin(current, location)
+        if urlsplit(target).scheme not in ("http", "https") or not host_of(target):
+            raise Blocked(f"redirect to a non-web address refused: {location[:80]}")
+        reason = nofetch_reason(target)
+        if reason:
+            raise Blocked(f"redirect to {host_of(target)} refused: on the no-fetch list ({reason})")
+        if not await self._public_host(host_of(target)):
+            raise Blocked(f"redirect to a private or local address refused: {host_of(target)}")
+        if (robots or host_of(target) != host_of(current)) and not await self.robots_allowed(target):
+            raise Blocked(f"robots.txt disallows {target}")
+        return target
+
     async def robots_allowed(self, url: str) -> bool:
         parts = urlsplit(url)
         host = parts.netloc
@@ -207,15 +296,25 @@ class Http:
         async with lock:
             if host not in self._robots:
                 try:
-                    r = await self._send("GET", f"{parts.scheme}://{host}/robots.txt", retries=1,
-                                         headers={"Accept": "text/plain"})
+                    robots_url = f"{parts.scheme}://{host}/robots.txt"
+                    r = await self._send("GET", robots_url, retries=1, headers={"Accept": "text/plain"})
+                    for _ in range(MAX_REDIRECTS):
+                        target = urljoin(robots_url, r.headers.get("location", "")) if r.is_redirect else ""
+                        if not target:
+                            break
+                        if (urlsplit(target).scheme not in ("http", "https") or nofetch_reason(target)
+                                or not await self._public_host(host_of(target))):
+                            r = httpx.Response(503)  # redirected somewhere we won't go: treat the site as unreachable
+                            break
+                        robots_url = target
+                        r = await self._send("GET", robots_url, retries=1, headers={"Accept": "text/plain"})
                     if r.status_code >= 500:
                         self._robots[host] = Robots("User-agent: *\nDisallow: /")  # RFC 9309: unreachable = disallow
                     elif r.status_code >= 400:
                         self._robots[host] = Robots("")  # no robots.txt = allow
                     else:
                         self._robots[host] = Robots(r.text)
-                except httpx.HTTPError:
+                except (httpx.HTTPError, FetchError):
                     self._robots[host] = Robots("User-agent: *\nDisallow: /")
         path = parts.path or "/"
         if parts.query:
@@ -226,6 +325,14 @@ class Http:
         if robots and not await self.robots_allowed(url):
             raise Blocked(f"robots.txt disallows {url}")
         r = await self._send(method, url, **kwargs)
+        hops = 0
+        while r.is_redirect and r.headers.get("location"):
+            if method != "GET" or hops >= MAX_REDIRECTS:
+                raise FetchError(f"HTTP {r.status_code} redirect from {urlsplit(url).netloc} not followed")
+            url = await self._redirect_target(r, url, robots=robots)
+            kwargs.pop("params", None)  # the Location already carries its query
+            r = await self._send("GET", url, **kwargs)
+            hops += 1
         if r.status_code >= 400:
             raise FetchError(f"HTTP {r.status_code} from {urlsplit(url).netloc}{urlsplit(url).path}")
         return r

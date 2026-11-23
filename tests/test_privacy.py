@@ -1,3 +1,4 @@
+import pytest
 from jobradar.privacy import extraction_warnings, redact
 
 # A made-up resume in the usual Indian fresher layout.
@@ -91,3 +92,43 @@ def test_resume_found_under_any_name(tmp_path):
     assert resume_text(settings) == ("Jane Doe\nSkills: Python", "profile/Jane_Doe_Resume (1).txt")
     (tmp_path / "profile" / "resume.md").write_text("Configured name wins")
     assert resume_text(settings)[1] == "profile/resume.md"
+
+
+@pytest.mark.parametrize("text,secret", [
+    ("Priya Sharma | Software Developer\nEducation\nB.Tech", "Priya"),
+    ("RESUME\nPriya Sharma\nSkills\nPython. Priya Sharma built X.", "Priya"),
+    ("José Fernández García\nExperience\nWorked with José Fernández García on Y", "José"),
+    ("Skills\nmail me: priya at gmail dot com", "priya"),
+    ("Skills\npriya[at]gmail[dot]com", "priya"),
+    ("Skills\npriya @ gmail.com", "priya"),
+    ("Skills\npriya＠gmail.com", "priya"),
+    ("Skills\npriya\u200b@gmail.com", "priya"),
+    ("Skills\ncall 98 7654 3210", "7654"),
+    ("Skills\ncall (98765) 43210", "43210"),
+    ("Skills\ncall ९८७६५४३२१०", "9876"),
+    ("Skills\ncall ९८७६५४३२१०", "९८७६"),
+    ("Skills\ncall ９８７６５４３２１０", "9876"),
+    ("Skills\noffice 011-2345 6789", "6789"),
+    ("Skills\n(415) 555-0100", "0100"),
+    ("Skills\nid 234567890123", "234567890123"),
+    ("Skills\nid 2345.6789.0123", "6789"),
+    ("Skills\nPAN ABCDE1234F", "ABCDE"),
+    ("Skills\nRohini New Delhi 110085", "110085"),
+    ("Skills\nwas born on 14 August 2003", "2003"),
+    ("Skills\nfind me @priya_codes", "priya_codes"),
+    ("Skills\nportfolio priyasharma.dev", "priyasharma"),
+    ("Priya Sharma\nH.No 12, Sector 7, Rohini, Delhi\nACADEMIC QUALIFICATION\nB.Tech", "Sector 7"),
+    ("Skills\nLinkedIn: priya-sharma-123 | GitHub: priyasharma", "priya-sharma-123"),
+    ("Skills\nLinkedIn: priya-sharma-123 | GitHub: priyasharma", "priyasharma"),
+    ("Priya Sharma\nSkills\nBuilt by P. Sharma and Priya S.", "P. Sharma"),
+    ("Priya Sharma\nSkills\nBuilt by P. Sharma and Priya S.", "Priya S."),
+])
+def test_redaction_catches_odd_formats(text, secret):
+    assert secret not in redact(text, {}).text
+
+
+def test_redaction_leaves_ordinary_resume_text_alone():
+    text = ("Experience\nBuilt REST APIs with Node.js, Next.js and Socket.io; deployed on AWS EC2.\n"
+            "Solved 450+ problems. CGPA: 8.7 / 10, 2022 – 2026. Percentage: 87.8%\n"
+            "Interned at Amazon.com, worked on ASP.NET; used @nestjs/core and React 18.2.0. 6-9 LPA, 2 years.")
+    assert redact(text, {}).text == text

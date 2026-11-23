@@ -1,0 +1,42 @@
+# Your resume as structured data. `jobradar resume --setup` writes profile/resume.yaml for you from your resume file
+# (needs a free GEMINI_API_KEY). Without a key, copy this file to profile/resume.yaml and fill it in by hand.
+# `jobradar draft <id>` tailors a copy of it for one job; `jobradar resume --pdf` shows how it renders.
+name: Your Name
+contact:                      # one list per line, shown centred under your name
+  - - {text: "+91 98765 43210", url: ""}
+    - {text: you@example.com, url: "mailto:you@example.com"}
+    - {text: "City, State", url: ""}
+  - - {text: linkedin.com/in/you, url: "https://linkedin.com/in/you"}
+    - {text: github.com/you, url: "https://github.com/you"}
+summary: ""                   # optional; most freshers leave it out
+education:
+  - {school: Your University, place: City, degree: B.Tech in Computer Science and Engineering, dates: "2022 – 2026",
+     score: "CGPA: 8.5 / 10", details: []}
+experience:                   # newest first; a company with two roles (intern, then full-time) lists both
+  - company: Company Name
+    place: ""
+    dates: ""
+    roles:
+      - title: Software Engineering Intern
+        dates: "Jan 2026 – Jun 2026"
+        place: ""
+        bullets:
+          - Built a REST API in Express.js and PostgreSQL for the internal billing dashboard.
+          - Wrote Jest tests for the payment module.
+projects:
+  - name: Project Name
+    tech: React.js, Node.js, MongoDB
+    dates: ""
+    links: [{text: GitHub, url: "https://github.com/you/project"}, {text: Live, url: ""}]
+    bullets:
+      - What you built and with what, in one line.
+      - The most interesting technical part.
+skills:
+  - {label: Languages, items: [JavaScript, Python, SQL]}
+  - {label: Tools, items: [Git, Docker]}
+sections:                     # anything else, with your own heading
+  - heading: Achievements
+    bullets:
+      - Won 2nd place in a 24-hour college hackathon.
+headings: {skills: Technical Skills}   # your own heading text for the standard sections
+order: [education, experience, projects, skills, Achievements]

@@ -16,7 +16,7 @@ summary: ""                       # optional, 2-3 lines about you; used when the
 skills: []
 
 # ---------------------------------------------------------------- experience
-# The template is set up for a fresher. For experienced roles, see "Other setups" in the README.
+# The template is set up for a fresher. For experienced roles, see "Other setups" in docs/configuration.md.
 experience_years: 0               # your own full-time experience. 0 = fresher. The AI and the rule score use it
 max_years_required: 1             # drop jobs whose description asks for more years than this
 min_years_required: 0             # drop jobs that ask for fewer years than this (e.g. 2 hides fresher roles). 0 = off
@@ -114,9 +114,16 @@ ai:
   batch_size: 6                   # jobs per request
   rpm: 10                         # stay under the free requests-per-minute limit
 
+# ---------------------------------------------------------------- application kit (`jobradar draft <id>`)
+# Tailored resumes are rendered from profile/resume.yaml (`jobradar resume --setup` makes it). Leave style empty for
+# the defaults: A4, 10pt New Computer Modern (the LaTeX resume look), bold headings.
+resume:
+  style: {}                       # e.g. {paper: us-letter, size: 10.5, heading: smallcaps, underline: true}
+
 # ---------------------------------------------------------------- digest
 notify:
   top_n: 15                       # jobs per digest
   min_score: 55                   # only send jobs at or above this score (AI fit if scored, else rule score)
   telegram: true                  # needs TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID
-  email: true                     # needs SMTP_USER + SMTP_PASSWORD + EMAIL_TO
+  email: true                     # needs SMTP_USER + SMTP_PASSWORD (+ EMAIL_TO, else it goes to SMTP_USER)
+  attach_spreadsheet: true        # attach data/jobs.xlsx (every tracked job) to the email and send it on Telegram

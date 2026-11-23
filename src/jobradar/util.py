@@ -45,10 +45,54 @@ def html_to_text(value: str | None) -> str:
     parser.feed(value)
     parser.close()
     text = "".join(parser.parts).replace("\xa0", " ").replace("​", "")
-    text = re.sub(r"[ \t\r\f\v]+", " ", text)
+    text = re.sub(r"[^\S\n]+", " ", text)  # every kind of space (&emsp;, &thinsp;...), not just ASCII ones
     text = re.sub(r" *\n *", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
+
+
+# Job text comes from strangers. Before it is stored, printed or rendered: no terminal escape sequences (which can
+# write your clipboard or fake output), no other control characters, no zero-width or bidi-override characters
+# (which disguise text), and no line breaks inside one-line fields (which can fake CI annotations).
+_UNSAFE = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff\ufffe\uffff"
+                     "\ud800-\udfff]")  # ... and noncharacters / lone surrogates, which break XML (docx, xlsx)
+
+
+def clean_block(text) -> str:
+    """Multi-line text (descriptions): line breaks and tabs kept, every other control character removed."""
+    text = str(text or "").replace("\r\n", "\n").replace("\r", "\n").replace("\u2028", "\n").replace("\u2029", "\n")
+    return _UNSAFE.sub("", text)
+
+
+def clean_line(text) -> str:
+    """One-line text (titles, companies, locations, URLs): control characters removed, all whitespace one space."""
+    return re.sub(r"\s+", " ", clean_block(text)).strip()
+
+
+def safe_url(url) -> str:
+    """The URL if it is a plain http(s) link, else ''. Used wherever a job's link becomes clickable."""
+    url = clean_line(url)
+    return url if re.fullmatch(r"https?://[^\s<>\"'`\\]+", url, re.I) and len(url) <= 2000 else ""
+
+
+def tag_blocks(page: str, opening: re.Pattern, closing: str, *, window: int | None = None) -> list[tuple[re.Match, str]]:
+    """(opening-tag match, inner text) for each block, in linear time. A lazy regex like "<script>(.*?)</script>"
+    rescans the rest of the page for every opening tag that is never closed (quadratic on a hostile page); here the
+    closing tag is found with a plain string search, and the scan stops at the first block that never closes.
+    window: give up on a block whose closing tag isn't within this many characters (and carry on)."""
+    page = page or ""
+    low = page.lower()
+    closing = closing.lower()
+    out = []
+    for m in opening.finditer(page):
+        limit = m.end() + window if window else len(page)
+        end = low.find(closing, m.end(), limit)
+        if end < 0:
+            if window:
+                continue
+            break
+        out.append((m, page[m.end():end]))
+    return out
 
 
 def today() -> date:
@@ -95,11 +139,26 @@ def date_from_workday(value: str | None, ref: date | None = None) -> str | None:
     elif "yesterday" in s:
         days = 1
     else:
-        m = re.search(r"(\d+)(\+?)\s*days?", s)
+        m = re.search(r"(?<!\d)(\d{1,4})(\+?)\s*days?", s[:200])
         if not m:
             return None
         days = int(m.group(1)) + (1 if m.group(2) else 0)  # "30+ days" is older than 30
     return (ref - timedelta(days=days)).isoformat()
+
+
+def date_from_ago(value: str | None, ref: date | None = None) -> str | None:
+    """'Posted 2 weeks ago', '3 days ago', 'today', 'just now', 'a month ago' -> YYYY-MM-DD."""
+    s = (value or "").lower()[:120]
+    ref = ref or today()
+    if re.search(r"\b(?:today|just now|hours? ago|minutes? ago|few hours)\b", s):
+        return ref.isoformat()
+    if "yesterday" in s:
+        return (ref - timedelta(days=1)).isoformat()
+    m = re.search(r"\b(\d{1,3}|an?|one)\+?\s*(day|week|month)s?\s+ago", s)
+    if not m:
+        return None
+    n = 1 if m.group(1) in ("a", "an", "one") else int(m.group(1))
+    return (ref - timedelta(days=n * {"day": 1, "week": 7, "month": 30}[m.group(2)])).isoformat()
 
 
 def days_ago(iso: str | None, ref: date | None = None) -> int | None:

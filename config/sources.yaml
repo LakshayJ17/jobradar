@@ -160,6 +160,12 @@ scrape:
     title_from_url: '/job/detail/(?:fresher-)?(.+?)-job-'
     salary_label: 'CTC \(ANNUAL\)'      # pay shown on the page (its JSON-LD says 0)
     max_details: 60
+    page_fallback:                     # its multi-location jobs carry no JobPosting data: read the page itself
+      title: ['class="heading_4_5 profile">', '</div>']
+      company: ['class="heading_6 company_name">', '</div>']
+      location: ['id="location_names">', '</p>']
+      description: ['class="internship_details">', 'about_company_text_container']
+      posted: ['ic-16-reschedule"></i>', '</div>']
   - name: Shine
     list_urls:
       - https://www.shine.com/job-search/software-engineer-fresher-jobs

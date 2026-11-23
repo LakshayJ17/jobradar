@@ -148,8 +148,9 @@ def init_files(root: Path) -> list[tuple[str, str]]:
             done.append((target, f"created from {template}"))
         else:
             done.append((target, f"skipped: {template} is missing"))
-    for folder in ("profile", "data"):
+    for folder in ("profile", "data"):  # your resume and tracker: readable by you only
         (root / folder).mkdir(exist_ok=True)
+        (root / folder).chmod(0o700)
     return done
 
 

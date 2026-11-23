@@ -10,6 +10,7 @@ anything else in thousands a year ("$90k-120k").
 
 from __future__ import annotations
 
+import math
 import re
 
 # Rough INR per unit, only used to compare pay across currencies (e.g. a USD remote job against an LPA floor).
@@ -85,7 +86,11 @@ def _amount(num: str, unit: str | None) -> float | None:
 
 def to_lpa(lo: float | None, hi: float | None, currency: str = "INR", period: str = "year") -> list[float] | None:
     """[min, max] LPA from amounts in a currency per year / month; None when it isn't usable pay."""
-    vals = [float(v) for v in (lo, hi) if v not in (None, "", 0, "0")]
+    try:
+        vals = [float(v) for v in (lo, hi) if v not in (None, "", 0, "0")]
+    except (TypeError, ValueError):
+        return None
+    vals = [v for v in vals if math.isfinite(v) and v > 0]  # "-inf" / "nan" in a schema field is not pay
     if not vals or period == "hour":
         return None
     rate = RATES.get((currency or "INR").upper())

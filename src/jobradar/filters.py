@@ -14,8 +14,10 @@ from .util import country_name, country_names, days_ago
 _NUM_WORDS = {"zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
               "eight": 8, "nine": 9, "ten": 10}
 _NUM = r"(\d{1,2}|zero|one|two|three|four|five|six|seven|eight|nine|ten)"
+# Each optional part owns its trailing whitespace ("\s*(?:\+\s*)?", never "\s*\+?\s*"), so a long run of spaces
+# can't be split between two \s* in every possible way (that was quadratic on hostile descriptions).
 _YEARS_RX = re.compile(
-    rf"\b{_NUM}\s*(?:\+|plus)?\s*(?:(?:-|–|—|to)\s*{_NUM}\s*\+?\s*)?(?:years?|yrs?)(?:'s)?\b", re.I)
+    rf"\b{_NUM}\s*(?:(?:\+|plus)\s*)?(?:(?:-|–|—|to)\s*{_NUM}\s*(?:\+\s*)?)?(?:years?|yrs?)(?:'s)?\b", re.I)
 _EXPERIENCE_RX = re.compile(r"experience|expertise|\bexp\b|work(?:ing)? (?:in|on|with)|industry|professional"
                             r"|hands[- ]on|proven|track record", re.I)
 _NOT_EXPERIENCE_RX = re.compile(r"^\W*(?:old|of age|ago|in business|degree|program|course|bachelor|b\.?tech|warranty"
@@ -59,10 +61,18 @@ _FRESHER_RX = re.compile(
     r"new grad|fresh(?:er|ers| graduate)|entry[- ]level|early[- ]career|recent(?:ly)? graduat|university grad"
     r"|campus|no (?:prior )?experience (?:is )?required|0\s*(?:-|–|to)\s*[12]\s*(?:years?|yrs?)"
     r"|graduate (?:program|engineer|trainee)|trainee", re.I)
+# "*+" (possessive): a long "2020/2021/..." list is read once, never re-split while searching for "batch".
 _BATCH_RX = re.compile(
-    r"((?:20\d\d\s*(?:/|,|&|and|or|-|–)\s*)*20\d\d)\s*(?:batch|pass[- ]?outs?|graduat\w*|campus|grads?\b|new grad)"
-    r"|(?:batch|class)\s*(?:of\s*)?((?:20\d\d\s*(?:/|,|&|and|or|-|–)\s*)*20\d\d)"
-    r"|graduat\w*\s+(?:in|by)\s+((?:20\d\d\s*(?:/|,|&|and|or)\s*)*20\d\d)", re.I)
+    r"((?:20\d\d\s*(?:/|,|&|and|or|-|–)\s*)*+20\d\d)\s*(?:batch|pass[- ]?outs?|graduat\w*|campus|grads?\b|new grad)"
+    r"|(?:batch|class)\s*(?:of\s*)?((?:20\d\d\s*(?:/|,|&|and|or|-|–)\s*)*+20\d\d)"
+    r"|graduat\w*\s+(?:in|by)\s+((?:20\d\d\s*(?:/|,|&|and|or)\s*)*+20\d\d)", re.I)
+TEXT_LIMIT = 20_000  # characters of a description the rules read; real postings are far shorter
+
+
+def _readable(text: str | None) -> str:
+    """Description text for the rules: whitespace runs collapsed (line breaks kept) and length capped."""
+    text = re.sub(r"[^\S\n]+", " ", (text or "")[: TEXT_LIMIT * 2])
+    return re.sub(r"\s*\n\s*", "\n", text)[:TEXT_LIMIT]
 # A title that only says "graduate / trainee / associate" must also name the field (profile early_career_title_needs).
 TECH_FIELD = r"engineer|developer|software|technolog|programm|data|\bai\b|\bml\b|\bit\b|\bsde\b|cloud|cyber"
 _INTERN_RX = re.compile(r"\bintern(?:ship)?s?\b|\bco-?op\b", re.I)
@@ -88,6 +98,7 @@ def _num(token: str) -> int:
 
 def min_years_required(text: str) -> int | None:
     """Smallest 'N years of experience' requirement in the text (permissive: 'BS+3y or MS+1y' -> 1)."""
+    text = _readable(text)
     found: list[int] = []
     for m in _YEARS_RX.finditer(text or ""):
         after = text[m.end(): m.end() + 70]
@@ -106,7 +117,7 @@ def min_years_required(text: str) -> int | None:
 
 def batch_years(text: str) -> set[int]:
     years: set[int] = set()
-    for m in _BATCH_RX.finditer(text or ""):
+    for m in _BATCH_RX.finditer(_readable(text)):
         chunk = next(g for g in m.groups() if g)
         years |= {int(y) for y in re.findall(r"20\d\d", chunk)}
     return years
@@ -204,7 +215,7 @@ class Rules:
 
     # ------------------------------------------------------------ stage 2: needs the description
     def postfilter(self, job: Job, *, ignore_age: bool = False) -> str | None:
-        text = job.description or ""
+        text = _readable(job.description)
         if not ignore_age and self._too_old(job):  # detail pages can carry a more accurate (older) posting date
             return "too-old"
         if not self.location_ok(job):
@@ -234,7 +245,7 @@ class Rules:
 
     def score(self, job: Job) -> tuple[int, list[str], int | None]:
         """(0-100 rule score, human-readable signals, min years required)."""
-        title, text = job.title or "", job.description or ""
+        title, text = job.title or "", _readable(job.description)
         score, signals = 40, []
         years = min_years_required(text)
         if self.early_candidate:

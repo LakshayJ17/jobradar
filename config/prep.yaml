@@ -1,0 +1,506 @@
+# Free interview-prep resources, used by `jobradar draft <id>` (prep.md). The AI only picks topic keys from this
+# file, so every link here was checked by hand, not generated. Edit freely: add a resource, a topic, or keywords
+# (matched as whole words in the job posting when there is no AI key). kind: video, article, course, practice,
+# docs, book, roadmap or cheatsheet; lang: en or hi (Hindi).
+
+# Interview-prep resource catalog. URLs checked 2026-11-23 (HTTP status + page title; YouTube via oEmbed).
+# Keywords assume word-boundary matching. Bare "go", "js", "ts", "ai", "ml", "os", "api" are left out because
+# they match too much ("html" contains "ml", "rapid" contains "api"). "java" will also match inside "javascript"
+# unless you match on word boundaries.
+# Lines tagged "search-verified" are on sites that block automated fetches (Cloudflare/bot challenge). They were
+# confirmed through the search index or by status only.
+topics:
+  dsa_roadmaps:
+    title: DSA roadmaps & problem lists
+    keywords: [dsa, data structures, algorithms, leetcode, coding interview, problem solving, coding round, competitive programming, time complexity, big o, neetcode]
+    resources:
+      - {title: "NeetCode Roadmap (NeetCode 150 by pattern)", url: "https://neetcode.io/roadmap", kind: roadmap, lang: en, note: "free; video solution for every problem"}  # search-verified (SPA)
+      - {title: "NeetCode 150 problem list", url: "https://neetcode.io/practice/practice/neetcode150", kind: practice, lang: en, note: "free list; optional paid Pro tier"}  # search-verified (SPA)
+      - {title: "Grind 75 (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/grind75/", kind: practice, lang: en, note: "free, no signup; customisable weekly schedule"}
+      - {title: "Striver's A2Z DSA Sheet", url: "https://takeuforward.org/prep-hub/strivers-a2z-dsa-sheet", kind: practice, lang: en, note: "free list; signup to track; paid Plus optional"}
+      - {title: "Striver's SDE Sheet", url: "https://takeuforward.org/prep-hub/strivers-sde-sheet", kind: practice, lang: en, note: "free; must-do interview problems grouped by topic"}
+      - {title: "LeetCode Top Interview 150 study plan", url: "https://leetcode.com/studyplan/top-interview-150/", kind: practice, lang: en, note: "free with signup to submit"}  # search-verified (Cloudflare 403)
+  dsa_courses:
+    title: DSA full video courses
+    keywords: [dsa, data structures, algorithms, placement preparation, coding interview, problem solving, c++ dsa, java dsa]
+    resources:
+      - {title: "Striver's A2Z DSA Course (take U forward)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz", kind: video, lang: en, note: "free; follows the A2Z sheet"}
+      - {title: "Complete C++ Placement DSA Course (Love Babbar, CodeHelp)", url: "https://www.youtube.com/playlist?list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA", kind: video, lang: hi, note: "free; C++ from basics to advanced DSA"}
+      - {title: "Java + DSA + Interview Preparation (Kunal Kushwaha)", url: "https://www.youtube.com/playlist?list=PL9gnSGHSqcnr_DxHsP7AW9ftq0AtAyYqJ", kind: video, lang: en, note: "free; Java-based bootcamp"}
+      - {title: "MIT 6.006 Introduction to Algorithms (Spring 2020)", url: "https://www.youtube.com/playlist?list=PLUl4u3cNGP63EdVPNLG3ToM6LaEUuStEY", kind: video, lang: en, note: "free university lectures; theory-heavy"}
+  arrays_hashing:
+    title: Arrays, strings & hashing
+    keywords: [array, arrays, string, strings, hash map, hashmap, hash table, hashing, hashset, dictionary, prefix sum, subarray, matrix, anagram, kadane]
+    resources:
+      - {title: "Array cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/array/", kind: cheatsheet, lang: en, note: "techniques, corner cases, must-do problems"}
+      - {title: "Hash table cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/hash-table/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "String cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/string/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Arrays playlist, basics to advanced (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0rENwdL0nEH0uGom9no0nyB", kind: video, lang: en, note: "free; C++/Java/Python code"}
+      - {title: "Char arrays, strings & LeetCode questions (Love Babbar)", url: "https://www.youtube.com/watch?v=Wdjr6uoZ0e0", kind: video, lang: hi, note: "free single lecture"}
+  two_pointers_sliding_window:
+    title: Two pointers & sliding window
+    keywords: [two pointers, two pointer, sliding window, fast and slow pointers, subarray, substring, window, longest substring]
+    resources:
+      - {title: "Two Pointer and Sliding Window playlist (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0q7vrFA_HEWcqRqMpCXzYAL", kind: video, lang: en, note: "free; language independent"}
+      - {title: "Sliding Window playlist (Aditya Verma)", url: "https://www.youtube.com/playlist?list=PL_z_8CaSLPWeM8BDJmIYDaoQ5zuwyxnfj", kind: video, lang: hi, note: "free; fixed and variable window patterns"}
+      - {title: "Two Pointers (USACO Guide)", url: "https://usaco.guide/silver/two-pointers", kind: article, lang: en, note: "free, no signup"}
+      - {title: "LeetCode Sliding Window problem list", url: "https://leetcode.com/problem-list/sliding-window/", kind: practice, lang: en, note: "free with signup to submit"}  # search-verified (Cloudflare 403)
+  binary_search:
+    title: Binary search
+    keywords: [binary search, search space, sorted array, lower bound, upper bound, bisect, binary search on answer, rotated sorted array]
+    resources:
+      - {title: "Binary Search beginner to advanced (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0pMFMWuuvDNMAkoQFi-h0ZF", kind: video, lang: en, note: "free; includes binary search on answers"}
+      - {title: "Binary Search playlist (Aditya Verma)", url: "https://www.youtube.com/playlist?list=PL_z_8CaSLPWeYfhtuKHj-9MpYb6XQJ_f2", kind: video, lang: hi, note: "free"}
+      - {title: "Binary Search (cp-algorithms)", url: "https://cp-algorithms.com/num_methods/binary_search.html", kind: article, lang: en, note: "free; rigorous treatment with variants"}
+      - {title: "Sorting and searching cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/sorting-searching/", kind: cheatsheet, lang: en, note: "free, no signup"}
+  linked_lists:
+    title: Linked lists
+    keywords: [linked list, linked lists, linkedlist, singly linked list, doubly linked list, cycle detection, reverse linked list, pointers]
+    resources:
+      - {title: "Linked list cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/linked-list/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Linked List beginner to advanced (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0rAuz8tVcM0AymmhTRsfaLU", kind: video, lang: en, note: "free"}
+      - {title: "Linked List series (Love Babbar)", url: "https://www.youtube.com/playlist?list=PLDzeHZWIZsTr54_TH_NK4ibFojS4mmQA6", kind: video, lang: hi, note: "free"}
+      - {title: "Linked list visualisation (VisuAlgo)", url: "https://visualgo.net/en/list", kind: practice, lang: en, note: "free interactive animations"}
+      - {title: "LeetCode Linked List problem list", url: "https://leetcode.com/problem-list/linked-list/", kind: practice, lang: en, note: "free with signup to submit"}  # search-verified (Cloudflare 403)
+  stacks_queues:
+    title: Stacks & queues
+    keywords: [stack, stacks, queue, queues, deque, monotonic stack, lifo, fifo, valid parentheses, next greater element]
+    resources:
+      - {title: "Stack cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/stack/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Queue cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/queue/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Stack and Queue playlist (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0pOd5zvVVSzgpo6BaCpHT9c", kind: video, lang: en, note: "free; includes monotonic stack problems"}
+      - {title: "Stack playlist (Aditya Verma)", url: "https://www.youtube.com/playlist?list=PL_z_8CaSLPWdeOezg68SKkeLN4-T_jNHd", kind: video, lang: hi, note: "free"}
+  recursion_backtracking:
+    title: Recursion & backtracking
+    keywords: [recursion, recursive, backtracking, permutations, subsets, combinations, n-queens, sudoku solver, call stack]
+    resources:
+      - {title: "Recursion cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/recursion/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Recursion and Backtracking series (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0rGlzIn_7rsaR2FQ5e6ZOL9", kind: video, lang: en, note: "free"}
+      - {title: "Recursion + Backtracking course (Kunal Kushwaha)", url: "https://www.youtube.com/playlist?list=PL9gnSGHSqcnp39cTyB1dTZ2pJ04Xmdrod", kind: video, lang: en, note: "free; Java"}
+      - {title: "Recursion playlist (Aditya Verma)", url: "https://www.youtube.com/playlist?list=PL_z_8CaSLPWeT1ffjiImo0sYTcnLzo-wY", kind: video, lang: hi, note: "free; input-output method"}
+  trees:
+    title: Trees, BST & tries
+    keywords: [tree, trees, binary tree, bst, binary search tree, trie, tree traversal, inorder, level order, lowest common ancestor, avl, segment tree]
+    resources:
+      - {title: "Tree cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/tree/", kind: cheatsheet, lang: en, note: "covers binary trees and BSTs"}
+      - {title: "Trie cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/trie/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Binary Trees & BST series (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk", kind: video, lang: en, note: "free"}
+      - {title: "Trees playlist: binary tree, BST, AVL (Coder Army)", url: "https://www.youtube.com/playlist?list=PLQEaRBV9gAFsIul2ATmw7xP4eaQsjS_Lm", kind: video, lang: hi, note: "free"}
+      - {title: "BST & AVL visualisation (VisuAlgo)", url: "https://visualgo.net/en/bst", kind: practice, lang: en, note: "free interactive animations"}
+  heaps:
+    title: Heaps & priority queues
+    keywords: [heap, heaps, priority queue, min heap, max heap, heapq, top k, kth largest, k closest, median of stream]
+    resources:
+      - {title: "Heap cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/heap/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Heap playlist (Aditya Verma)", url: "https://www.youtube.com/playlist?list=PL_z_8CaSLPWdtY9W22VjnPxG30CXNZpI9", kind: video, lang: hi, note: "free; top-K pattern focus"}
+      - {title: "Data structures playlist (William Fiset)", url: "https://www.youtube.com/playlist?list=PLDV1Zeh2NRsB6SWUrDFW2RmDotAfPbeHu", kind: video, lang: en, note: "free; includes priority queue internals"}
+      - {title: "Binary heap visualisation (VisuAlgo)", url: "https://visualgo.net/en/heap", kind: practice, lang: en, note: "free interactive animations"}
+      - {title: "LeetCode Heap (Priority Queue) problem list", url: "https://leetcode.com/problem-list/heap-priority-queue/", kind: practice, lang: en, note: "free with signup to submit"}  # search-verified (Cloudflare 403)
+  graphs:
+    title: Graphs (BFS, DFS, shortest paths)
+    keywords: [graph, graphs, bfs, dfs, breadth first search, depth first search, shortest path, dijkstra, topological sort, union find, disjoint set, minimum spanning tree, grid traversal]
+    resources:
+      - {title: "Graph cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/graph/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Graph Series (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0oE3gA41TKO2H5bHpPd7fzn", kind: video, lang: en, note: "free; interview-centric, C++/Java"}
+      - {title: "Graph Theory playlist (William Fiset)", url: "https://www.youtube.com/playlist?list=PLDV1Zeh2NRsDGO4--qE8yH72HFL1Km93P", kind: video, lang: en, note: "free; strong visual explanations"}
+      - {title: "Graphs series (Rohit Negi, Coder Army)", url: "https://www.youtube.com/playlist?list=PLQEaRBV9gAFte7vWOl3AWFABndCRCsIRQ", kind: video, lang: hi, note: "free"}
+      - {title: "Dijkstra's algorithm (cp-algorithms)", url: "https://cp-algorithms.com/graph/dijkstra.html", kind: article, lang: en, note: "free; proof and implementation"}
+  dynamic_programming:
+    title: Dynamic programming
+    keywords: [dynamic programming, memoization, tabulation, knapsack, longest common subsequence, lis, dp on trees, optimal substructure]
+    resources:
+      - {title: "Dynamic programming cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/dynamic-programming/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Dynamic Programming playlist (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0qUlt5H_kiKYaNSqJ81PMMY", kind: video, lang: en, note: "free; recursion to tabulation to space optimisation"}
+      - {title: "Dynamic Programming playlist (Aditya Verma)", url: "https://www.youtube.com/playlist?list=PL_z_8CaSLPWekqhdCPmFohncHwz8TY2Go", kind: video, lang: hi, note: "free; pattern-based: knapsack, LCS, MCM"}
+      - {title: "AtCoder Educational DP Contest", url: "https://atcoder.jp/contests/dp", kind: practice, lang: en, note: "26 classic DP problems; free signup to submit"}
+  greedy:
+    title: Greedy algorithms & intervals
+    keywords: [greedy, greedy algorithm, intervals, merge intervals, interval scheduling, activity selection, job sequencing, huffman]
+    resources:
+      - {title: "Interval cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/interval/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Greedy algorithms with sorting (USACO Guide)", url: "https://usaco.guide/silver/greedy-sorting", kind: article, lang: en, note: "free, no signup"}
+      - {title: "Greedy Algorithm playlist (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0rF1w2Koyh78zafB0cz7tea", kind: video, lang: en, note: "free"}
+      - {title: "Algorithms playlist (Abdul Bari)", url: "https://www.youtube.com/playlist?list=PLDN4rrl48XKpZkf03iYFl-O29szjTrs_O", kind: video, lang: en, note: "free; classic greedy, MST, Huffman, DP theory"}
+  bit_manipulation:
+    title: Bit manipulation & math
+    keywords: [bit manipulation, bitwise, xor, bitmask, bits, binary representation, number theory, modular arithmetic, primes, gcd]
+    resources:
+      - {title: "Binary cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/binary/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Math cheatsheet (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/algorithms/math/", kind: cheatsheet, lang: en, note: "free, no signup"}
+      - {title: "Bit manipulation (cp-algorithms)", url: "https://cp-algorithms.com/algebra/bit-manipulation.html", kind: article, lang: en, note: "free"}
+      - {title: "Bit Manipulation playlist (Striver)", url: "https://www.youtube.com/playlist?list=PLgUwDviBIf0rnqh8QsJaHyIX7KUiaPUv7", kind: video, lang: en, note: "free"}
+  javascript:
+    title: JavaScript
+    keywords: [javascript, ecmascript, es6, closures, promises, async await, event loop, hoisting, dom, prototypes, vanilla javascript]
+    resources:
+      - {title: "The Modern JavaScript Tutorial (javascript.info)", url: "https://javascript.info/", kind: docs, lang: en, note: "free, no signup"}
+      - {title: "MDN JavaScript Guide", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide", kind: docs, lang: en, note: "official reference-quality guide"}
+      - {title: "Namaste JavaScript (Akshay Saini)", url: "https://www.youtube.com/playlist?list=PLlasXeu85E9cQ32gLCvAvr9vNaUccPVNP", kind: video, lang: en, note: "free; interview favourites: closures, hoisting, event loop"}
+      - {title: "Chai aur JavaScript (Hitesh Choudhary)", url: "https://www.youtube.com/playlist?list=PLu71SKxNbfoBuX3f4EOACle2y-tRC5Q37", kind: video, lang: hi, note: "free"}
+      - {title: "You Don't Know JS Yet (book series)", url: "https://github.com/getify/You-Dont-Know-JS", kind: book, lang: en, note: "free to read on GitHub"}
+  typescript:
+    title: TypeScript
+    keywords: [typescript, tsx, generics, type system, interfaces, type inference, tsconfig, strict typing, type safety]
+    resources:
+      - {title: "The TypeScript Handbook", url: "https://www.typescriptlang.org/docs/handbook/intro.html", kind: docs, lang: en, note: "official"}
+      - {title: "TypeScript Deep Dive (Basarat)", url: "https://basarat.gitbook.io/typescript/", kind: book, lang: en, note: "free online book"}
+      - {title: "type-challenges", url: "https://github.com/type-challenges/type-challenges", kind: practice, lang: en, note: "free type-level puzzles, easy to extreme"}
+      - {title: "React TypeScript tutorial for beginners (Codevolution)", url: "https://www.youtube.com/playlist?list=PLC3y8-rFHvwi1AXijGTKM0BKtHzVC-LSK", kind: video, lang: en, note: "free"}
+      - {title: "Chai aur TypeScript (Hitesh Choudhary)", url: "https://www.youtube.com/playlist?list=PLu71SKxNbfoBkkr8lblqtsJvxrw3j1tWC", kind: video, lang: hi, note: "free"}
+  react:
+    title: React
+    keywords: [react, reactjs, react.js, hooks, jsx, components, useeffect, usestate, redux, context api, react query, virtual dom, frontend]
+    resources:
+      - {title: "react.dev Learn", url: "https://react.dev/learn", kind: docs, lang: en, note: "official; modern hooks-first docs"}
+      - {title: "Learn React (Scrimba)", url: "https://scrimba.com/learn-react-c0e", kind: course, lang: en, note: "free interactive course; signup required"}
+      - {title: "React 19 complete tutorial (Codevolution)", url: "https://www.youtube.com/playlist?list=PLC3y8-rFHvwg9D7EOSEBabuutIdKZN5V3", kind: video, lang: en, note: "free"}
+      - {title: "Chai aur React, with projects (Hitesh Choudhary)", url: "https://www.youtube.com/playlist?list=PLu71SKxNbfoDqgPchmvIsL4hTnJIrtige", kind: video, lang: hi, note: "free"}
+  nextjs:
+    title: Next.js
+    keywords: [next.js, nextjs, app router, server components, react server components, ssr, ssg, isr, server actions, vercel]
+    resources:
+      - {title: "Next.js Learn course", url: "https://nextjs.org/learn", kind: course, lang: en, note: "free official course; optional signup to track"}
+      - {title: "Next.js documentation", url: "https://nextjs.org/docs", kind: docs, lang: en, note: "official"}
+      - {title: "Next.js 15 tutorial, beginner to advanced (Codevolution)", url: "https://www.youtube.com/playlist?list=PLC3y8-rFHvwhIEc4I4YsRz5C7GOBnxSJY", kind: video, lang: en, note: "free"}
+      - {title: "Chai aur full stack NextJS (Hitesh Choudhary)", url: "https://www.youtube.com/playlist?list=PLu71SKxNbfoBAaWGtn9GA2PTw0HO0tXzq", kind: video, lang: hi, note: "free"}
+  nodejs_express:
+    title: Node.js & Express
+    keywords: [node.js, nodejs, node, express, express.js, expressjs, backend, middleware, npm, nestjs, rest api development, event loop]
+    resources:
+      - {title: "Node.js Learn: introduction to Node.js", url: "https://nodejs.org/learn/getting-started/introduction-to-nodejs", kind: docs, lang: en, note: "official"}
+      - {title: "Express routing guide", url: "https://expressjs.com/en/guide/routing/", kind: docs, lang: en, note: "official"}
+      - {title: "Node.js Best Practices", url: "https://github.com/goldbergyoni/nodebestpractices", kind: article, lang: en, note: "free; error handling, security, structure"}
+      - {title: "Intro to backend: Node.js & Express (freeCodeCamp)", url: "https://www.youtube.com/watch?v=KOutPbKc9UM", kind: video, lang: en, note: "free full-length course"}
+      - {title: "Chai aur JavaScript Backend (Hitesh Choudhary)", url: "https://www.youtube.com/playlist?list=PLu71SKxNbfoBGh_8p_NS-ZAh6v7HhYqHW", kind: video, lang: hi, note: "free; Express, MongoDB, JWT project"}
+  python:
+    title: Python
+    keywords: [python, python3, django, flask, fastapi, pip, list comprehension, decorators, generators, pythonic]
+    resources:
+      - {title: "The Python Tutorial (python.org)", url: "https://docs.python.org/3/tutorial/", kind: docs, lang: en, note: "official"}
+      - {title: "CS50's Introduction to Programming with Python", url: "https://cs50.harvard.edu/python/", kind: course, lang: en, note: "free lectures and problem sets"}
+      - {title: "Python track (Exercism)", url: "https://exercism.org/tracks/python", kind: practice, lang: en, note: "free; signup; optional mentor feedback"}
+      - {title: "Python for Beginners, 100 Days of Code (CodeWithHarry)", url: "https://www.youtube.com/playlist?list=PLu0W_9lII9agwh1XjRt242xIpHhPT2llg", kind: video, lang: hi, note: "free"}
+  java:
+    title: Java
+    keywords: [java, jvm, jdk, spring, spring boot, collections framework, multithreading, maven, gradle, hibernate, j2ee]
+    resources:
+      - {title: "Dev.java Learn", url: "https://dev.java/learn/", kind: docs, lang: en, note: "official Oracle tutorials"}
+      - {title: "Java Programming MOOC (University of Helsinki)", url: "https://java-programming.mooc.fi/", kind: course, lang: en, note: "free university course with graded exercises"}
+      - {title: "Java tutorial for beginners (Telusko)", url: "https://www.youtube.com/playlist?list=PLsyeobzWxl7pe_IiTfNyr55kwJPWbgxB5", kind: video, lang: en, note: "free"}
+      - {title: "Java & DSA in 30 days (Apna College)", url: "https://www.youtube.com/playlist?list=PLfqMhTWNBTe3LtFWcvwpqTkUSlB32kJop", kind: video, lang: hi, note: "free; placement-oriented"}
+  cpp:
+    title: C++
+    keywords: ["c++", cpp, stl, pointers, memory management, templates, vectors, smart pointers, modern c++]
+    resources:
+      - {title: "LearnCpp.com", url: "https://www.learncpp.com/", kind: docs, lang: en, note: "free, no signup"}
+      - {title: "cppreference.com", url: "https://en.cppreference.com/", kind: docs, lang: en, note: "reference for STL containers and algorithms"}
+      - {title: "C++ Programming Course, beginner to advanced (freeCodeCamp)", url: "https://www.youtube.com/watch?v=8jLOx1hD3_o", kind: video, lang: en, note: "free full-length course"}
+      - {title: "Learn C++ Language (Love Babbar)", url: "https://www.youtube.com/playlist?list=PLDzeHZWIZsToJ9zSl4-5BfOBzAR0fm--f", kind: video, lang: hi, note: "free"}
+  golang:
+    title: Go (Golang)
+    keywords: [golang, go language, goroutines, channels, go modules, gin, gorm, concurrency in go]
+    resources:
+      - {title: "A Tour of Go", url: "https://go.dev/tour/", kind: course, lang: en, note: "official interactive tour, runs in browser"}
+      - {title: "Go by Example", url: "https://gobyexample.com/", kind: docs, lang: en, note: "free annotated examples"}
+      - {title: "Effective Go", url: "https://go.dev/doc/effective_go", kind: docs, lang: en, note: "official idioms guide"}
+      - {title: "Go programming course with projects (freeCodeCamp)", url: "https://www.youtube.com/watch?v=un6ZyFkqFKo", kind: video, lang: en, note: "free full-length course"}
+  html_css:
+    title: HTML & CSS
+    keywords: [html, html5, css, css3, flexbox, css grid, responsive design, tailwind, tailwind css, sass, semantic html, accessibility, web design]
+    resources:
+      - {title: "MDN Learn web development", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development", kind: course, lang: en, note: "free structured curriculum"}
+      - {title: "Learn CSS (web.dev)", url: "https://web.dev/learn/css", kind: course, lang: en, note: "free, by Google Chrome team"}
+      - {title: "Flexbox Froggy", url: "https://flexboxfroggy.com/", kind: practice, lang: en, note: "free game; see also cssgridgarden.com"}
+      - {title: "HTML & CSS for Absolute Beginners (Kevin Powell)", url: "https://www.youtube.com/playlist?list=PL4-IK0AVhVjOJs_UjdQeyEZ_cmEV3uJvx", kind: video, lang: en, note: "free"}
+      - {title: "Chai aur HTML (Hitesh Choudhary)", url: "https://www.youtube.com/playlist?list=PLu71SKxNbfoDBNF5s-WH6aLbthSEIMhMI", kind: video, lang: hi, note: "free"}
+  sql:
+    title: SQL
+    keywords: [sql, mysql, query, queries, joins, group by, subquery, window functions, cte, rdbms, relational database, sql server, oracle, plsql]
+    resources:
+      - {title: "SQLBolt interactive lessons", url: "https://sqlbolt.com/", kind: practice, lang: en, note: "free, no signup"}
+      - {title: "Select Star SQL", url: "https://selectstarsql.com/", kind: course, lang: en, note: "free interactive book"}
+      - {title: "LeetCode SQL 50 study plan", url: "https://leetcode.com/studyplan/top-sql-50/", kind: practice, lang: en, note: "free with signup to submit"}  # search-verified (Cloudflare 403)
+      - {title: "HackerRank SQL practice", url: "https://www.hackerrank.com/domains/sql", kind: practice, lang: en, note: "free; signup to submit"}
+      - {title: "SQL complete course in 3 hours (Apna College)", url: "https://www.youtube.com/watch?v=hlGoQC332VM", kind: video, lang: hi, note: "free one-shot using MySQL"}
+  postgresql:
+    title: PostgreSQL
+    keywords: [postgresql, postgres, psql, pl/pgsql, jsonb, explain analyze, supabase, prisma, drizzle, neon]
+    resources:
+      - {title: "PostgreSQL official tutorial", url: "https://www.postgresql.org/docs/current/tutorial.html", kind: docs, lang: en, note: "official"}
+      - {title: "PostgreSQL Exercises", url: "https://pgexercises.com/", kind: practice, lang: en, note: "free, no signup; runs in browser"}
+      - {title: "Use The Index, Luke", url: "https://use-the-index-luke.com/", kind: book, lang: en, note: "free online; indexing and query tuning"}
+      - {title: "Learn PostgreSQL full course (freeCodeCamp)", url: "https://www.youtube.com/watch?v=qw--VYLpxG4", kind: video, lang: en, note: "free full-length course"}
+  mongodb:
+    title: MongoDB
+    keywords: [mongodb, mongo, mongoose, nosql, document database, aggregation pipeline, mongodb atlas, bson, mern]
+    resources:
+      - {title: "MongoDB University", url: "https://learn.mongodb.com/", kind: course, lang: en, note: "free courses; signup required"}
+      - {title: "Data modeling in MongoDB (docs)", url: "https://www.mongodb.com/docs/manual/data-modeling/", kind: docs, lang: en, note: "official; embedding vs referencing"}
+      - {title: "Aggregation operations (docs)", url: "https://www.mongodb.com/docs/manual/aggregation/", kind: docs, lang: en, note: "official"}
+      - {title: "MongoDB crash course 2026 (CodeWithHarry)", url: "https://www.youtube.com/watch?v=M1dKYQ7GsTg", kind: video, lang: hi, note: "free"}
+  redis:
+    title: Redis & caching
+    keywords: [redis, cache, caching, in-memory, key-value store, pub/sub, rate limiting, session store, memcached, ttl, bullmq]
+    resources:
+      - {title: "Redis data types (docs)", url: "https://redis.io/docs/latest/develop/data-types/", kind: docs, lang: en, note: "official"}
+      - {title: "Redis course: in-memory database (freeCodeCamp)", url: "https://www.youtube.com/watch?v=XCsS_NVAa1g", kind: video, lang: en, note: "free"}
+      - {title: "Redis crash course (Piyush Garg)", url: "https://www.youtube.com/watch?v=Vx2zPMPvmug", kind: video, lang: hi, note: "free; Node.js examples"}
+      - {title: "Redis roadmap (roadmap.sh)", url: "https://roadmap.sh/redis", kind: roadmap, lang: en, note: "free"}
+  dbms:
+    title: DBMS & database design
+    keywords: [dbms, database design, normalization, normal forms, er diagram, acid, transactions, indexing, schema design, data modeling, isolation levels, concurrency control, b-tree]
+    resources:
+      - {title: "DBMS complete playlist (Gate Smashers)", url: "https://www.youtube.com/playlist?list=PLxCzCOWd7aiFAN6I8CuViBuCdJgiOkT2Y", kind: video, lang: hi, note: "free; placement and GATE favourite"}
+      - {title: "CMU 15-445 Intro to Database Systems (Fall 2024)", url: "https://www.youtube.com/playlist?list=PLSE8ODhjZXjYDBpQnSymaectKjxCy6BYq", kind: video, lang: en, note: "free university course; storage, indexes, transactions"}
+      - {title: "Database Design course (freeCodeCamp)", url: "https://www.youtube.com/watch?v=ztHopE5Wnpc", kind: video, lang: en, note: "free; keys, relationships, normalization"}
+      - {title: "DBMS interview questions (InterviewBit)", url: "https://www.interviewbit.com/dbms-interview-questions/", kind: article, lang: en, note: "free, no signup"}
+  oop:
+    title: Object-oriented programming
+    keywords: [oop, oops, object oriented, object-oriented programming, classes, inheritance, polymorphism, encapsulation, abstraction, interfaces]
+    resources:
+      - {title: "OOP in Java course (Kunal Kushwaha)", url: "https://www.youtube.com/playlist?list=PL9gnSGHSqcno1G3XjUbwzXHL8_EttOuKk", kind: video, lang: en, note: "free"}
+      - {title: "Object Oriented Programming in C++ (Coder Army)", url: "https://www.youtube.com/playlist?list=PLQEaRBV9gAFujcBWJhBT2XXsuMlIfETBy", kind: video, lang: hi, note: "free"}
+      - {title: "Objects, classes, interfaces & inheritance (Dev.java)", url: "https://dev.java/learn/language/oop/classes/", kind: docs, lang: en, note: "official Java tutorial"}
+      - {title: "Object-oriented programming in JavaScript (MDN)", url: "https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Advanced_JavaScript_objects/Object-oriented_programming", kind: docs, lang: en, note: "free; for JS/TS developers"}
+  operating_systems:
+    title: Operating systems
+    keywords: [operating system, operating systems, process, thread, cpu scheduling, deadlock, memory management, paging, virtual memory, semaphore, mutex, synchronization, kernel]
+    resources:
+      - {title: "Operating Systems: Three Easy Pieces (OSTEP)", url: "https://pages.cs.wisc.edu/~remzi/OSTEP/", kind: book, lang: en, note: "free online textbook"}
+      - {title: "Operating System playlist (Neso Academy)", url: "https://www.youtube.com/playlist?list=PLBlnK6fEyqRiVhbXDGLXDk_OQAeuVcp2O", kind: video, lang: en, note: "free"}
+      - {title: "Operating System complete playlist (Gate Smashers)", url: "https://www.youtube.com/playlist?list=PLxCzCOWd7aiGz9donHRrE9I3Mwn6XdP8p", kind: video, lang: hi, note: "free; placement and GATE favourite"}
+      - {title: "Operating System interview questions (GeeksforGeeks)", url: "https://www.geeksforgeeks.org/operating-systems/operating-systems-interview-questions/", kind: article, lang: en, note: "free, no signup"}
+  computer_networks:
+    title: Computer networks
+    keywords: [computer networks, networking, tcp, udp, tcp/ip, osi model, dns, ip addressing, subnetting, routing, sockets, network protocols]
+    resources:
+      - {title: "Computer Networking full course: OSI model (Kunal Kushwaha)", url: "https://www.youtube.com/watch?v=IPvYjXCsTg8", kind: video, lang: en, note: "free single long video"}
+      - {title: "Computer Networks complete playlist (Gate Smashers)", url: "https://www.youtube.com/playlist?list=PLxCzCOWd7aiGFBD2-2joCpWOLUrDLvVV_", kind: video, lang: hi, note: "free; placement and GATE favourite"}
+      - {title: "High Performance Browser Networking (Ilya Grigorik)", url: "https://hpbn.co/", kind: book, lang: en, note: "free online; TCP, TLS, HTTP/2 for web devs"}
+      - {title: "Networking interview questions (InterviewBit)", url: "https://www.interviewbit.com/networking-interview-questions/", kind: article, lang: en, note: "free, no signup"}
+  http_rest_apis:
+    title: HTTP, REST APIs & how the web works
+    keywords: [http, https, rest, restful, rest api, api design, apis, status codes, graphql, grpc, websockets, cors, dns, browser rendering, openapi]
+    resources:
+      - {title: "Overview of HTTP (MDN)", url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview", kind: docs, lang: en, note: "free"}
+      - {title: "What happens when you type a URL (alex/what-happens-when)", url: "https://github.com/alex/what-happens-when", kind: article, lang: en, note: "free; classic interview question answered in depth"}
+      - {title: "How browsers work (web.dev)", url: "https://web.dev/articles/howbrowserswork", kind: article, lang: en, note: "free; parsing, rendering, layout"}
+      - {title: "Microsoft REST API Guidelines", url: "https://github.com/microsoft/api-guidelines", kind: docs, lang: en, note: "free; real-world API design conventions"}
+      - {title: "HTTP crash course: HTTP/1.1, HTTP/2, HTTP/3 (Hussein Nasser)", url: "https://www.youtube.com/watch?v=0OrmKCB0UrQ", kind: video, lang: en, note: "free"}
+  authentication:
+    title: Authentication & authorization
+    keywords: [authentication, authorization, jwt, oauth, oauth2, openid connect, oidc, sessions, cookies, sso, rbac, password hashing, nextauth, auth.js, clerk]
+    resources:
+      - {title: "Authentication Cheat Sheet (OWASP)", url: "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html", kind: cheatsheet, lang: en, note: "free; see also the Session Management sheet"}
+      - {title: "Introduction to JSON Web Tokens (jwt.io)", url: "https://www.jwt.io/introduction", kind: article, lang: en, note: "free"}
+      - {title: "The Copenhagen Book", url: "https://copenhagen.pilcrowonpaper.com/", kind: book, lang: en, note: "free guide to implementing sessions, passwords, OAuth"}
+      - {title: "OAuth 2.0 and OpenID Connect in plain English (OktaDev)", url: "https://www.youtube.com/watch?v=996OiexHze0", kind: video, lang: en, note: "free"}
+  web_security:
+    title: Web security (OWASP Top 10)
+    keywords: [web security, owasp, owasp top 10, xss, csrf, sql injection, ssrf, csp, secure coding, appsec, vulnerability, penetration testing]
+    resources:
+      - {title: "OWASP Top 10", url: "https://top10.owasp.org/", kind: docs, lang: en, note: "free; the standard web risk list"}
+      - {title: "Web Security Academy (PortSwigger)", url: "https://portswigger.net/web-security", kind: course, lang: en, note: "free; signup for hands-on labs"}
+      - {title: "OWASP Cheat Sheet Series", url: "https://cheatsheetseries.owasp.org/", kind: cheatsheet, lang: en, note: "free; per-topic secure coding guidance"}
+      - {title: "OWASP Juice Shop", url: "https://owasp.org/projects/juice-shop", kind: practice, lang: en, note: "free deliberately vulnerable app to practise attacks"}
+  system_design:
+    title: System design (HLD basics)
+    keywords: [system design, high level design, hld, scalability, distributed systems, load balancer, load balancing, microservices, sharding, replication, message queue, kafka, cdn, high availability]
+    resources:
+      - {title: "The System Design Primer", url: "https://github.com/donnemartin/system-design-primer", kind: book, lang: en, note: "free on GitHub; includes Anki flashcards"}
+      - {title: "System Design Fundamentals (ByteByteGo)", url: "https://www.youtube.com/playlist?list=PLCRMIe5FDPsd0gVs500xeOewfySTsmEjf", kind: video, lang: en, note: "free short animated explainers"}
+      - {title: "System Design playlist (Gaurav Sen)", url: "https://www.youtube.com/playlist?list=PLMCXHnjXnTnvo6alSjVkgxV-VH6EPyvoX", kind: video, lang: en, note: "free"}
+      - {title: "System Design in a Hurry (Hello Interview)", url: "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction", kind: article, lang: en, note: "core guide free; some pages premium"}
+      - {title: "High Level Design, basics to advanced (Concept && Coding)", url: "https://www.youtube.com/playlist?list=PL6W8uoQQ2c63W58rpNFDwdrBnq5G3EfT7", kind: video, lang: hi, note: "free"}
+  low_level_design:
+    title: Low-level design & design patterns
+    keywords: [low level design, lld, design patterns, object oriented design, machine coding, solid principles, uml, class diagram, singleton, factory pattern, observer pattern, strategy pattern]
+    resources:
+      - {title: "Design Patterns catalogue (Refactoring.Guru)", url: "https://refactoring.guru/design-patterns", kind: docs, lang: en, note: "free online; paid ebook optional"}
+      - {title: "awesome-low-level-design", url: "https://github.com/ashishps1/awesome-low-level-design", kind: article, lang: en, note: "free; LLD problems with code solutions"}
+      - {title: "Low Level Design primer course (sudoCODE)", url: "https://www.youtube.com/playlist?list=PLTCrU9sGybupCpY20eked6blbHI4zZ55k", kind: video, lang: en, note: "free"}
+      - {title: "Low Level Design, basics to advanced (Concept && Coding)", url: "https://www.youtube.com/playlist?list=PL6W8uoQQ2c61X_9e6Net0WdYZidm7zooW", kind: video, lang: hi, note: "free; Java examples"}
+  git:
+    title: Git & GitHub
+    keywords: [git, github, gitlab, bitbucket, version control, branching, merge, rebase, pull request, merge conflicts]
+    resources:
+      - {title: "Pro Git book", url: "https://git-scm.com/book/en/v2", kind: book, lang: en, note: "free official book"}
+      - {title: "Learn Git Branching", url: "https://learngitbranching.js.org/", kind: practice, lang: en, note: "free interactive visual exercises"}
+      - {title: "Git cheat sheet (GitHub Education, PDF)", url: "https://education.github.com/git-cheat-sheet-education.pdf", kind: cheatsheet, lang: en, note: "free PDF"}
+      - {title: "Git explained in 25 minutes (TechWorld with Nana)", url: "https://www.youtube.com/watch?v=8944biinHgE", kind: video, lang: en, note: "free"}
+      - {title: "Complete Git and GitHub tutorial (Apna College)", url: "https://www.youtube.com/watch?v=Ez8F0nW6S-w", kind: video, lang: hi, note: "free"}
+  linux_shell:
+    title: Linux & shell
+    keywords: [linux, unix, shell, bash, shell scripting, command line, terminal, ubuntu, ssh, file permissions, cron, grep]
+    resources:
+      - {title: "The Missing Semester of Your CS Education (MIT)", url: "https://missing.csail.mit.edu/", kind: course, lang: en, note: "free lectures; shell, vim, git, scripting"}
+      - {title: "OverTheWire: Bandit", url: "https://overthewire.org/wargames/bandit/", kind: practice, lang: en, note: "free wargame; learn the shell by doing"}
+      - {title: "The Linux Command Line (William Shotts)", url: "https://linuxcommand.org/tlcl.php", kind: book, lang: en, note: "free PDF"}
+      - {title: "Linux command line for beginners (Engineering Digest)", url: "https://www.youtube.com/playlist?list=PLA3GkZPtsafbK3YyxdRzF5yh1TuwGn_Lu", kind: video, lang: hi, note: "free"}
+  docker:
+    title: Docker & containers
+    keywords: [docker, dockerfile, docker compose, container, containers, containerization, docker image, podman, container registry]
+    resources:
+      - {title: "Docker docs: get started", url: "https://docs.docker.com/get-started/", kind: docs, lang: en, note: "official"}
+      - {title: "Docker Curriculum", url: "https://docker-curriculum.com/", kind: article, lang: en, note: "free hands-on tutorial"}
+      - {title: "Docker tutorial for beginners, full course (TechWorld with Nana)", url: "https://www.youtube.com/watch?v=3c-iBn73dDE", kind: video, lang: en, note: "free"}
+      - {title: "Docker in one shot, part 1 (Piyush Garg)", url: "https://www.youtube.com/watch?v=31k6AtW-b3Y", kind: video, lang: hi, note: "free"}
+  kubernetes:
+    title: Kubernetes basics
+    keywords: [kubernetes, k8s, kubectl, helm, pods, container orchestration, eks, gke, aks, minikube, ingress]
+    resources:
+      - {title: "Learn Kubernetes Basics (kubernetes.io)", url: "https://kubernetes.io/docs/tutorials/kubernetes-basics/", kind: docs, lang: en, note: "official tutorial"}
+      - {title: "Kubernetes tutorial for beginners, full course (TechWorld with Nana)", url: "https://www.youtube.com/watch?v=X48VuDVv0do", kind: video, lang: en, note: "free"}
+      - {title: "Killercoda playgrounds", url: "https://killercoda.com/playgrounds", kind: practice, lang: en, note: "free in-browser clusters; signup required"}
+      - {title: "Kubernetes roadmap (roadmap.sh)", url: "https://roadmap.sh/kubernetes", kind: roadmap, lang: en, note: "free"}
+  ci_cd:
+    title: CI/CD & DevOps basics
+    keywords: ["ci/cd", continuous integration, continuous delivery, continuous deployment, github actions, jenkins, gitlab ci, build pipeline, devops, argo cd]
+    resources:
+      - {title: "GitHub Actions documentation", url: "https://docs.github.com/en/actions", kind: docs, lang: en, note: "official; free minutes for public repos"}
+      - {title: "Continuous integration vs delivery vs deployment (Atlassian)", url: "https://www.atlassian.com/continuous-delivery/principles/continuous-integration-vs-delivery-vs-deployment", kind: article, lang: en, note: "free"}
+      - {title: "Continuous Integration (Martin Fowler)", url: "https://martinfowler.com/articles/continuousIntegration.html", kind: article, lang: en, note: "free; the canonical essay"}
+      - {title: "GitHub Actions tutorial: CI/CD pipeline with Docker (TechWorld with Nana)", url: "https://www.youtube.com/watch?v=R8_veQiYBjI", kind: video, lang: en, note: "free"}
+  cloud:
+    title: Cloud basics (AWS, Azure, GCP)
+    keywords: [aws, amazon web services, azure, gcp, google cloud, cloud computing, ec2, s3, lambda, serverless, iam, vpc, cloud practitioner]
+    resources:
+      - {title: "AWS Cloud Practitioner Essentials (AWS Skill Builder)", url: "https://skillbuilder.aws/learn/94T2BEN85A/aws-cloud-practitioner-essentials/8D79F3AVR7", kind: course, lang: en, note: "free; AWS Skill Builder signup"}  # search-verified (SPA)
+      - {title: "Azure Fundamentals: describe cloud concepts (Microsoft Learn)", url: "https://learn.microsoft.com/en-us/training/paths/microsoft-azure-fundamentals-describe-cloud-concepts/", kind: course, lang: en, note: "free; signup only to track progress"}
+      - {title: "Google Skills (formerly Google Cloud Skills Boost)", url: "https://www.skills.google/", kind: course, lang: en, note: "many free courses and labs; signup"}
+      - {title: "AWS Certified Cloud Practitioner course 2026 (freeCodeCamp)", url: "https://www.youtube.com/watch?v=7HKot-brXFE", kind: video, lang: en, note: "free full-length course"}
+      - {title: "AWS playlist (Piyush Garg)", url: "https://www.youtube.com/playlist?list=PLinedj3B30sDZ17Fpe3xGUDRBkutaGyUp", kind: video, lang: hi, note: "free"}
+  testing:
+    title: Software testing (unit, integration, e2e)
+    keywords: [testing, unit testing, unit tests, integration testing, e2e testing, end-to-end testing, jest, vitest, pytest, junit, tdd, playwright, cypress, test automation, mocking]
+    resources:
+      - {title: "The Practical Test Pyramid (Martin Fowler)", url: "https://martinfowler.com/articles/practical-test-pyramid.html", kind: article, lang: en, note: "free"}
+      - {title: "JavaScript & Node.js Testing Best Practices", url: "https://github.com/goldbergyoni/javascript-testing-best-practices", kind: article, lang: en, note: "free"}
+      - {title: "Jest: getting started", url: "https://jestjs.io/docs/getting-started", kind: docs, lang: en, note: "official"}
+      - {title: "Playwright docs", url: "https://playwright.dev/docs/intro", kind: docs, lang: en, note: "official; end-to-end browser testing"}
+      - {title: "pytest: get started", url: "https://docs.pytest.org/en/stable/getting-started.html", kind: docs, lang: en, note: "official"}
+  observability:
+    title: Observability, logging & monitoring
+    keywords: [observability, logging, monitoring, metrics, tracing, distributed tracing, opentelemetry, prometheus, grafana, elk, datadog, alerting, sre]
+    resources:
+      - {title: "Observability primer (OpenTelemetry)", url: "https://opentelemetry.io/docs/concepts/observability-primer/", kind: docs, lang: en, note: "official; logs, metrics, traces explained"}
+      - {title: "Monitoring Distributed Systems (Google SRE book)", url: "https://sre.google/sre-book/monitoring-distributed-systems/", kind: book, lang: en, note: "free; four golden signals"}
+      - {title: "Prometheus overview", url: "https://prometheus.io/docs/introduction/overview/", kind: docs, lang: en, note: "official"}
+      - {title: "The Twelve-Factor App: Logs", url: "https://12factor.net/logs", kind: article, lang: en, note: "free"}
+      - {title: "Logs, metrics and traces: three pillars (Tech Tutorials with Piyush)", url: "https://www.youtube.com/watch?v=GsW0-uiCwqQ", kind: video, lang: en, note: "free"}
+  ml_fundamentals:
+    title: Machine learning fundamentals
+    keywords: [machine learning, scikit-learn, sklearn, regression, classification, supervised learning, unsupervised learning, clustering, feature engineering, model evaluation, xgboost, ml engineer]
+    resources:
+      - {title: "Machine Learning Crash Course (Google)", url: "https://developers.google.com/machine-learning/crash-course", kind: course, lang: en, note: "free, no signup"}
+      - {title: "Intro to Machine Learning (Kaggle Learn)", url: "https://www.kaggle.com/learn/intro-to-machine-learning", kind: course, lang: en, note: "free; signup to run notebooks"}  # bot challenge; title confirmed only
+      - {title: "Machine Learning playlist (StatQuest)", url: "https://www.youtube.com/playlist?list=PLblh5JKOoLUICTaGLRoHQDuF_7q2GfuJF", kind: video, lang: en, note: "free; intuition-first explanations"}
+      - {title: "100 Days of Machine Learning (CampusX)", url: "https://www.youtube.com/playlist?list=PLKnIA16_Rmvbr7zKYQuBfsVkjoLcJgxHH", kind: video, lang: hi, note: "free"}
+      - {title: "An Introduction to Statistical Learning (ISLR/ISLP)", url: "https://www.statlearning.com/", kind: book, lang: en, note: "free PDF; R and Python editions"}
+  deep_learning:
+    title: Deep learning
+    keywords: [deep learning, neural networks, neural network, pytorch, tensorflow, keras, cnn, rnn, lstm, transformers, backpropagation, computer vision, nlp]
+    resources:
+      - {title: "Neural Networks: Zero to Hero (Andrej Karpathy)", url: "https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ", kind: video, lang: en, note: "free; build backprop to GPT from scratch"}
+      - {title: "Neural networks series (3Blue1Brown)", url: "https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi", kind: video, lang: en, note: "free; visual intuition"}
+      - {title: "Practical Deep Learning for Coders (fast.ai)", url: "https://course.fast.ai/", kind: course, lang: en, note: "free"}
+      - {title: "Dive into Deep Learning (d2l.ai)", url: "https://d2l.ai/", kind: book, lang: en, note: "free interactive book with code"}
+      - {title: "100 Days of Deep Learning (CampusX)", url: "https://www.youtube.com/playlist?list=PLKnIA16_RmvYuZauWaPlRTC54KxSNLtNn", kind: video, lang: hi, note: "free"}
+  llms_prompting:
+    title: LLMs & prompt engineering
+    keywords: [llm, llms, large language models, prompt engineering, prompting, generative ai, genai, gpt, openai, claude, gemini, fine-tuning, tokens, context window, structured output]
+    resources:
+      - {title: "Intro to Large Language Models (Andrej Karpathy)", url: "https://www.youtube.com/watch?v=zjkBMFhNj_g", kind: video, lang: en, note: "free 1-hour talk"}
+      - {title: "Hugging Face LLM Course", url: "https://huggingface.co/learn/llm-course", kind: course, lang: en, note: "free"}
+      - {title: "Prompt engineering overview (Anthropic docs)", url: "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview", kind: docs, lang: en, note: "free"}
+      - {title: "Prompt engineering guide (OpenAI docs)", url: "https://developers.openai.com/api/docs/guides/prompt-engineering", kind: docs, lang: en, note: "free"}
+      - {title: "Generative AI using LangChain (CampusX)", url: "https://www.youtube.com/playlist?list=PLKnIA16_RmvaTbihpo4MtzVm4XOQa0ER0", kind: video, lang: hi, note: "free"}
+  rag_vector_databases:
+    title: RAG & vector databases
+    keywords: [rag, retrieval augmented generation, retrieval-augmented generation, vector database, vector search, embeddings, semantic search, pgvector, pinecone, chroma, weaviate, qdrant, langchain, llamaindex, chunking]
+    resources:
+      - {title: "Learn RAG from scratch (freeCodeCamp, LangChain engineer)", url: "https://www.youtube.com/watch?v=sVcwVQRHIc8", kind: video, lang: en, note: "free full-length course"}
+      - {title: "What is a vector database? (Pinecone)", url: "https://www.pinecone.io/learn/vector-database/", kind: article, lang: en, note: "free; vendor-written but general"}
+      - {title: "pgvector", url: "https://github.com/pgvector/pgvector", kind: docs, lang: en, note: "official README; vector search in PostgreSQL"}
+      - {title: "Contextual retrieval (Anthropic)", url: "https://www.anthropic.com/research/contextual-retrieval", kind: article, lang: en, note: "free; hybrid search, reranking, chunk context"}
+      - {title: "RAG playlist (CampusX)", url: "https://www.youtube.com/playlist?list=PLKnIA16_Rmva0dRLWEHLznSHKbFD_RJfX", kind: video, lang: hi, note: "free"}
+  ai_agents:
+    title: AI agents & tool use
+    keywords: [ai agents, agentic, agentic ai, tool use, tool calling, function calling, mcp, model context protocol, langgraph, crewai, autogen, multi-agent, agent workflows]
+    resources:
+      - {title: "Building effective agents (Anthropic)", url: "https://www.anthropic.com/research/building-effective-agents", kind: article, lang: en, note: "free; workflows vs agents, common patterns"}
+      - {title: "Hugging Face AI Agents Course", url: "https://huggingface.co/learn/agents-course", kind: course, lang: en, note: "free; optional certificate"}
+      - {title: "What is the Model Context Protocol (MCP)?", url: "https://modelcontextprotocol.io/docs/getting-started/intro", kind: docs, lang: en, note: "official"}
+      - {title: "Function calling guide (OpenAI docs)", url: "https://developers.openai.com/api/docs/guides/function-calling", kind: docs, lang: en, note: "free"}
+      - {title: "Agentic AI using LangGraph (CampusX)", url: "https://www.youtube.com/playlist?list=PLKnIA16_RmvYsvB8qkUQuJmJNuiCUJFPL", kind: video, lang: hi, note: "free"}
+  llm_evaluation:
+    title: LLM evaluation
+    keywords: [evals, llm evaluation, evaluation, llm-as-a-judge, llm as judge, hallucination, benchmarks, ragas, promptfoo, langsmith, guardrails, golden dataset, red teaming]
+    resources:
+      - {title: "Your AI Product Needs Evals (Hamel Husain)", url: "https://hamel.dev/blog/posts/evals/", kind: article, lang: en, note: "free; practical eval workflow"}
+      - {title: "Task-specific LLM evals that do and don't work (Eugene Yan)", url: "https://eugeneyan.com/writing/evals/", kind: article, lang: en, note: "free"}
+      - {title: "Define success criteria and build evaluations (Anthropic docs)", url: "https://platform.claude.com/docs/en/test-and-evaluate/develop-tests", kind: docs, lang: en, note: "free"}
+      - {title: "promptfoo docs", url: "https://www.promptfoo.dev/docs/intro/", kind: docs, lang: en, note: "open-source eval and red-teaming CLI"}
+      - {title: "LLM Evaluation Guidebook (Hugging Face)", url: "https://github.com/huggingface/evaluation-guidebook", kind: book, lang: en, note: "free on GitHub"}
+  mlops:
+    title: MLOps basics
+    keywords: [mlops, llmops, model deployment, model serving, mlflow, kubeflow, feature store, model monitoring, ml pipelines, sagemaker, vertex ai, experiment tracking]
+    resources:
+      - {title: "Made With ML (Anyscale)", url: "https://madewithml.com/", kind: course, lang: en, note: "free; design, develop, deploy, iterate"}
+      - {title: "MLOps Zoomcamp (DataTalks.Club)", url: "https://github.com/DataTalksClub/mlops-zoomcamp", kind: course, lang: en, note: "free; cohort or self-paced"}
+      - {title: "MLOps: continuous delivery and automation pipelines (Google Cloud)", url: "https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning", kind: article, lang: en, note: "free; MLOps maturity levels"}
+      - {title: "Full Stack Deep Learning 2022", url: "https://fullstackdeeplearning.com/course/2022/", kind: course, lang: en, note: "free lectures and labs"}
+  statistics_probability:
+    title: Statistics & probability
+    keywords: [statistics, probability, hypothesis testing, a/b testing, probability distributions, bayes theorem, p-value, confidence interval, statistical analysis, descriptive statistics]
+    resources:
+      - {title: "Statistics and probability (Khan Academy)", url: "https://www.khanacademy.org/math/statistics-probability", kind: course, lang: en, note: "free; signup only to track"}  # bot challenge; status 200 + search-verified
+      - {title: "OpenIntro Statistics", url: "https://www.openintro.org/book/os/", kind: book, lang: en, note: "free PDF"}
+      - {title: "Seeing Theory (Brown University)", url: "https://seeing-theory.brown.edu/", kind: article, lang: en, note: "free interactive visual probability"}
+      - {title: "Statistics Fundamentals (StatQuest)", url: "https://www.youtube.com/playlist?list=PLblh5JKOoLUK0FLuzwntyYI10UQFUhsY9", kind: video, lang: en, note: "free"}
+      - {title: "Stats for Data Science (Krish Naik Hindi)", url: "https://www.youtube.com/playlist?list=PLTDARY42LDV6YHSRo669_uDDGmUEmQnDJ", kind: video, lang: hi, note: "free"}
+  data_analysis:
+    title: Data analysis with pandas
+    keywords: [pandas, numpy, data analysis, dataframe, data cleaning, eda, exploratory data analysis, jupyter, matplotlib, seaborn, data analyst, power bi, excel]
+    resources:
+      - {title: "10 minutes to pandas", url: "https://pandas.pydata.org/docs/user_guide/10min.html", kind: docs, lang: en, note: "official quick start"}
+      - {title: "Pandas (Kaggle Learn)", url: "https://www.kaggle.com/learn/pandas", kind: course, lang: en, note: "free; signup to run notebooks"}  # bot challenge; title confirmed only
+      - {title: "Python for Data Analysis, 3rd ed. (Wes McKinney)", url: "https://wesmckinney.com/book/", kind: book, lang: en, note: "free online edition by pandas' creator"}
+      - {title: "Pandas tutorials (Corey Schafer)", url: "https://www.youtube.com/playlist?list=PL-osiE80TeTsWmV9i9c58mdDCSskIFdDS", kind: video, lang: en, note: "free"}
+      - {title: "Pandas playlist (CampusX)", url: "https://www.youtube.com/playlist?list=PLKnIA16_RmvbR85fgbfVRKOiMokUKVupy", kind: video, lang: hi, note: "free"}
+  behavioral_hr:
+    title: Behavioural & HR interviews
+    keywords: [behavioral, behavioural, hr round, hr interview, star method, tell me about yourself, teamwork, leadership, communication skills, culture fit, strengths and weaknesses, conflict resolution]
+    resources:
+      - {title: "Behavioral interviews guide (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/behavioral-interview/", kind: article, lang: en, note: "free; includes common question list"}
+      - {title: "The STAR method for behavioral interviews (MIT CAPD)", url: "https://capd.mit.edu/resources/the-star-method-for-behavioral-interviews/", kind: article, lang: en, note: "free; includes worksheet"}
+      - {title: "Tell me about yourself: structure a strong answer (Jeff Su)", url: "https://www.youtube.com/watch?v=es7XtrloDIQ", kind: video, lang: en, note: "free"}
+      - {title: "STAR method of answering in interviews (Apna College)", url: "https://www.youtube.com/watch?v=uhDLHn6uVUg", kind: video, lang: hi, note: "free"}
+      - {title: "HR interview questions and answers (IndiaBix)", url: "https://www.indiabix.com/hr-interview/questions-and-answers/", kind: practice, lang: en, note: "free, no signup; sample answers"}
+  project_deep_dive:
+    title: Resume & project deep-dive
+    keywords: [projects, project experience, portfolio, resume, internship experience, side projects, open source contributions, hackathon, final year project]
+    resources:
+      - {title: "Resume guide for software engineers (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/resume/", kind: article, lang: en, note: "free; impact-focused project bullets"}
+      - {title: "Crafting your self introduction (Tech Interview Handbook)", url: "https://www.techinterviewhandbook.org/self-introduction/", kind: article, lang: en, note: "free"}
+      - {title: "Why the behavioral interview matters (Hello Interview)", url: "https://www.hellointerview.com/learn/behavioral/course/why-the-behavioral-matters", kind: article, lang: en, note: "first lesson free; later lessons premium"}
+      - {title: "How to answer DSA questions and explain projects (Striver)", url: "https://www.youtube.com/watch?v=PG4t_6qjxz0", kind: video, lang: hi, note: "free"}
+      - {title: "Explain projects using STAR, with follow-up questions (Tech Classes)", url: "https://www.youtube.com/watch?v=y4MVHzUdQCc", kind: video, lang: hi, note: "free"}
+  aptitude:
+    title: Aptitude (quant, reasoning, verbal)
+    keywords: [aptitude, quantitative aptitude, logical reasoning, verbal ability, reasoning ability, aptitude test, tcs nqt, amcat, elitmus, cocubes, mass recruitment, service based]
+    resources:
+      - {title: "Aptitude questions and answers (IndiaBix)", url: "https://www.indiabix.com/aptitude/questions-and-answers/", kind: practice, lang: en, note: "free, no signup"}
+      - {title: "Logical reasoning (IndiaBix)", url: "https://www.indiabix.com/logical-reasoning/questions-and-answers/", kind: practice, lang: en, note: "free, no signup"}
+      - {title: "Verbal ability (IndiaBix)", url: "https://www.indiabix.com/verbal-ability/questions-and-answers/", kind: practice, lang: en, note: "free, no signup"}
+      - {title: "Quantitative Aptitude in Hindi (CareerRide)", url: "https://www.youtube.com/playlist?list=PLpyc33gOcbVDwq7y8raY0tURJOOY2GejK", kind: video, lang: hi, note: "free; shortcuts for placement tests"}
+      - {title: "Feel Free to Learn (aptitude channel)", url: "https://www.youtube.com/@FeelFreetoLearn", kind: video, lang: en, note: "free; topic-wise quant and reasoning playlists"}
+  online_assessments_mocks:
+    title: Online assessments & mock interviews
+    keywords: [online assessment, coding test, coding assessment, hackerrank, hackerearth, codility, codechef, mettl, coding round, mock interview, mock interviews, interview practice]
+    resources:
+      - {title: "HackerRank Interview Preparation Kit", url: "https://www.hackerrank.com/interview/interview-preparation-kit", kind: practice, lang: en, note: "free; signup; same editor many OAs use"}
+      - {title: "HackerRank skills certification tests", url: "https://www.hackerrank.com/skills-verification", kind: practice, lang: en, note: "free timed tests; good OA rehearsal"}
+      - {title: "CodeChef practice", url: "https://www.codechef.com/practice", kind: practice, lang: en, note: "free; signup to submit"}
+      - {title: "GeeksforGeeks practice", url: "https://www.geeksforgeeks.org/explore", kind: practice, lang: en, note: "free; company-tagged problems"}
+      - {title: "Aced (formerly Exponent / Pramp) peer mock interviews", url: "https://www.aced.io/practice", kind: practice, lang: en, note: "free monthly credits; feedback and transcripts paid"}

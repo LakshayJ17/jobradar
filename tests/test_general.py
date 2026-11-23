@@ -54,10 +54,10 @@ def test_template_still_drops_board_senior_labels(profile, make_job):
 
 def test_ai_prompt_follows_the_profile(profile, senior, usa):
     fresher = score_system(profile)
-    assert "a fresh graduate" in fresher and "outside India" in fresher and "Master's or PhD" in fresher
+    assert "recent graduate with under 1 year" in fresher and "outside India" in fresher and "Master's or PhD" in fresher
     assert "software engineering, AI / ML or data roles" in fresher and '"freshers"' in fresher
     exp = score_system(dict(senior, locations=usa["locations"], degree="M.S. Computer Science"))
-    assert "4 year(s) of full-time experience" in exp and "fresh graduate" not in exp and "India" not in exp
+    assert "4 year(s) of full-time experience" in exp and "recent graduate" not in exp and "India" not in exp
     assert "MORE than 6 year(s)" in exp and "less than 2 year(s)" in exp and "backend engineering roles" in exp
     assert "outside United States" in exp and "requires a PhD" in exp and "Master's" not in exp
     assert candidate(senior) == "B.E. Computer Engineering, class of 2021, 4 year(s) of full-time experience"

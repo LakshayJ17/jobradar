@@ -22,17 +22,18 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 
 from ..models import Job
 from ..salary import from_schema, parse_text
-from ..util import clip, country_name, date_from_iso, html_to_text
+from ..util import clip, country_name, date_from_ago, date_from_iso, html_to_text, tag_blocks
 
 COMPLETE_LISTING = False  # listing pages show the newest jobs only, so "missing" does not mean "closed"
-_LD_RX = re.compile(r"<script[^>]*type=[\"']application/ld\+json[\"'][^>]*>(.*?)</script>", re.S | re.I)
-_A_RX = re.compile(r"<a\b[^>]*?href=[\"']([^\"'#]+)[\"'][^>]*>(.*?)</a>", re.S | re.I)
+# Opening tags only, with bounded attribute runs; the content up to the closing tag is found by util.tag_blocks.
+_LD_OPEN = re.compile(r"<script\b[^>]{0,400}?type=[\"']application/ld\+json[\"'][^>]{0,400}>", re.I)
+_A_OPEN = re.compile(r"<a\b[^>]{0,800}?href=[\"']([^\"'#<>]{1,2000})[\"'][^>]{0,800}>", re.I)
 _SKIP_TEXT = re.compile(r"^(apply|view|save|share|details?|more|read more|know more)\b", re.I)
 
 
 def ld_blocks(page: str) -> list:
     out = []
-    for raw in _LD_RX.findall(page or ""):
+    for _, raw in tag_blocks(page, _LD_OPEN, "</script>"):
         raw = raw.strip()
         for candidate in (raw, re.sub(r"[\x00-\x1f]+", " ", raw)):  # some sites put raw newlines in strings
             try:
@@ -79,6 +80,8 @@ def listing_links(page: str, base_url: str, pattern: str) -> dict[str, str]:
         absolute = urljoin(base_url, htmllib.unescape(url))
         if urlsplit(absolute).netloc != urlsplit(base_url).netloc or not rx.search(urlsplit(absolute).path):
             return
+        if urlsplit(absolute).scheme == "http" and urlsplit(base_url).scheme == "https":
+            absolute = "https" + absolute[4:]  # never downgrade to plain http
         key = canonical(absolute)
         text = re.sub(r"\s+", " ", text or "").strip()
         current = links.get(key, "")
@@ -92,7 +95,8 @@ def listing_links(page: str, base_url: str, pattern: str) -> dict[str, str]:
                 url = it.get("url") or (item.get("url") if isinstance(item, dict) else item if isinstance(item, str) else None)
                 if url:
                     add(url, it.get("name") or (item.get("name", "") if isinstance(item, dict) else ""))
-    for href, inner in _A_RX.findall(page or ""):
+    for m, inner in tag_blocks(page, _A_OPEN, "</a>", window=4000):
+        href = m.group(1)
         add(href, htmllib.unescape(re.sub(r"<[^>]+>", " ", inner)))
     return links
 
@@ -188,17 +192,47 @@ async def fetch(http, target) -> list[Job]:
                 title=_title_hint(url, text, title_rx), url=url,
                 needs_detail=True, detail={"url": url, "cap": int(o.get("max_details", 40)),
                                            "company_from_page": bool(o.get("company_from_page", True)),
-                                           "salary_label": o.get("salary_label")},
+                                           "salary_label": o.get("salary_label"),
+                                           "page_fallback": o.get("page_fallback")},
             )
     return list(jobs.values())
+
+
+def page_fields(page: str, spec: dict) -> dict[str, str]:
+    """Fields read from a page's visible HTML, for pages without JobPosting data. spec (sources.yaml page_fallback):
+    {field: [start pattern, end pattern]}; the text between them (at most 20,000 characters) is used."""
+    out = {}
+    for field, (start, end) in ((k, v if isinstance(v, list) else [v, "<"]) for k, v in (spec or {}).items()):
+        m = re.search(start, page or "")
+        if not m:
+            continue
+        stop = re.compile(end).search(page, m.end(), m.end() + 20000)
+        out[field] = html_to_text(page[m.end(): stop.start() if stop else m.end() + 20000])
+    return out
+
+
+def apply_page_fields(job: Job, fields: dict[str, str]) -> None:
+    job.title = clip(fields.get("title") or job.title, 200)
+    if fields.get("company") and job.detail.get("company_from_page", True):
+        job.company = clip(fields["company"], 120)
+    if fields.get("location"):
+        job.location = clip(" ".join(fields["location"].split()), 200)
+        job.remote = True if "work from home" in job.location.lower() or "remote" in job.location.lower() else job.remote
+    job.posted_at = date_from_ago(fields.get("posted")) or job.posted_at
+    job.description = fields.get("description") or ""
 
 
 async def enrich(http, job: Job) -> None:
     page = await http.get_html(job.detail["url"])
     postings = job_postings(page)
-    if not postings:
+    if postings:
+        apply_posting(job, postings[0])
+    elif job.detail.get("page_fallback"):  # e.g. Internshala's multi-location jobs carry no JobPosting data
+        apply_page_fields(job, page_fields(page, job.detail["page_fallback"]))
+        if not job.description:
+            raise ValueError("no JobPosting data, and the page layout didn't match page_fallback")
+    else:
         raise ValueError("no JobPosting data on the page")
-    apply_posting(job, postings[0])
     if not job.salary and job.detail.get("salary_label"):
         job.salary = salary_from_label(page, job.detail["salary_label"])
 
@@ -209,8 +243,9 @@ def salary_from_label(page: str, label_rx: str) -> list[float] | None:
     m = re.search(label_rx, page or "")
     if not m:
         return None
-    tail = re.split(r'\\?"', page[m.end(): m.end() + 800])[0]  # embedded JSON: stop at the closing quote
-    parts = [x.strip() for x in htmllib.unescape(re.sub(r"<[^>]+>", "\x00", tail)).split("\x00") if x.strip()]
+    tail = re.sub(r"<[^>]+>", "\x00", page[m.end(): m.end() + 800])  # tags first: their attributes have quotes
+    tail = re.split(r'\\?"', tail)[0]  # embedded JSON: stop at the closing quote
+    parts = [x.strip() for x in htmllib.unescape(tail).split("\x00") if x.strip()]
     if not parts:
         return None
     value = parts[0]  # only the element right after the label ("Competitive salary" -> unknown)
