@@ -14,6 +14,7 @@ from ..util import country_name, date_from_epoch, html_to_text
 
 COMPLETE_LISTING = False  # first pages only (robots.txt disallows paging)
 RESULTS = "https://www.google.com/about/careers/applications/jobs/results"
+INTERN_LEVEL = "INTERN_AND_APPRENTICE"
 DEFAULT_QUERIES = ("", "software engineer", "software developer", "machine learning", "data", "site reliability",
                    "front end", "back end", "cloud", "security")
 
@@ -57,15 +58,26 @@ def parse_page(page: str, level: str = "") -> tuple[list[Job], int, int]:
             location=" / ".join(dict.fromkeys(x for x in locations if x)),
             posted_at=date_from_epoch(_at(row, 12, 0)) or date_from_epoch(_at(row, 14, 0)),
             description="\n\n".join(p for p in parts if p.strip() and p.strip() != "Responsibilities:"),
-            level_hint="entry_level" if level == "EARLY" else "",
+            level_hint={"EARLY": "entry_level", INTERN_LEVEL: "internship"}.get(level, ""),
+            employment_type="Intern" if level == INTERN_LEVEL else "",
         ))
     return jobs, int(total or 0), int(size)
 
 
+def levels(opts: dict) -> list[str]:
+    """Experience levels to search: sources.yaml levels, plus internships when profile.yaml asks for them."""
+    mode = opts.get("internships")
+    if mode == "only":
+        return [INTERN_LEVEL]
+    base = list(opts.get("levels") or ["EARLY"])
+    return base + [INTERN_LEVEL] if mode and INTERN_LEVEL not in base else base
+
+
 async def fetch(http, target) -> list[Job]:
     jobs: dict[str, Job] = {}
-    for level in target.opts.get("levels") or ["EARLY"]:
-        for q in target.opts.get("queries") or DEFAULT_QUERIES:
+    for level in levels(target.opts):
+        # internships are few: one broad search finds them all, and keeps requests down
+        for q in ("",) if level == INTERN_LEVEL else target.opts.get("queries") or DEFAULT_QUERIES:
             where = target.opts.get("location") or country_name(target.opts.get("country", "India"))
             query = urlencode({"q": q, **({"location": where} if where else {}), "target_level": level})
             page_jobs, _total, _size = parse_page(await http.get_html(f"{RESULTS}?{query}"), level)

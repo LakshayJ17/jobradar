@@ -25,6 +25,8 @@ jobradar 2026-11-16
   Amazon, Atlassian, Google Careers, Unstop, Internshala, Shine, Wellfound and remote boards.
 - **Filters by your rules**: role, experience, level, location, remote, pay floor, posting age, graduation batch,
   and common job scams such as registration fees. Every rule is a setting.
+- **Jobs, internships or both**: one setting. Internships come from Internshala, Unstop and company boards, with
+  stipends shown a month and their own pay floor.
 - **Ranks with AI** (optional, Gemini free tier): eligibility, a fit score, a reason and your skill gaps for each job.
 - **Checks jobs are still open.** Postings that were taken down, stopped taking applications or passed their deadline
   are detected and hidden, even when the link still loads.
@@ -45,8 +47,8 @@ uv sync
 uv run jobradar init       # creates config/profile.yaml and .env, both git-ignored
 ```
 
-1. Edit `config/profile.yaml`: at least `graduation_year`, `experience_years`, `skills`, `locations` and `salary`
-   ([configuration guide](docs/configuration.md)).
+1. Edit `config/profile.yaml`: at least `graduation_year`, `experience_years`, `skills`, `internships`, `locations`
+   and `salary` ([configuration guide](docs/configuration.md)).
 2. Copy your resume into `profile/` (`.pdf`, `.txt` or `.md`, any name).
 3. Optional: put a free Gemini key in `.env` as `GEMINI_API_KEY` ([get one](https://aistudio.google.com/apikey)).
    Without it, jobs are ranked by rules only.
@@ -62,7 +64,7 @@ uv run jobradar open       # open the report
 | Command | What it does |
 |---|---|
 | `jobradar run` | Fetch, filter, score, report and notify. Flags: `--no-ai`, `--no-notify`, `--only <source or company>` |
-| `jobradar list` | Open matches, best first (`--new`, `--min 70`, `--company amazon`, `--status applied`) |
+| `jobradar list` | Open matches, best first (`--new`, `--min 70`, `--company amazon`, `--status applied`, `--internships`) |
 | `jobradar show <id>` | Details, pay, AI reasoning and description for one job |
 | `jobradar check [<id> ...]` | Check jobs are still open: taken down, applications closed, deadline passed |
 | `jobradar draft <id>` | Application kit: tailored resume, messages and interview prep (checks the job is open first) |

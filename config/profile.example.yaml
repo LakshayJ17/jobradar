@@ -64,7 +64,7 @@ exclude_titles:
   - '\b(engineer|developer|scientist|sde|swe|mts|analyst)\s*[-,]?\s*(2|3|4|5)\b'
   - 'sales|account (executive|manager)|business develop(ment|er)|pre-?sales|solutions? (engineer|consultant|architect)'
   - 'recruit|talent acquisition|marketing|legal|counsel|finance|accountant|payroll|\boperations\b'
-  - 'customer success|support engineer|technical support|consultant|business analyst'
+  - 'customer success|support engineer|technical support|consultant|business analyst|data entry'
   - 'designer|hardware|\bhw\b|semiconductor|\badmin(istrator)?\b|asic|\brtl\b|vlsi|analog|physical design|design verification|silicon|layout'
   - 'mechanical|electrical|\brf\b|antenna|manufacturing|technician|field (service|application) engineer|civil'
   - 'phd|post-?doc'
@@ -76,7 +76,11 @@ exclude_description:
   # common fresher job scams: you should never pay to get a job
   - '(registration|processing|training|joining|security|interview|placement)[- ]?(fee|deposit|charges?)|refundable deposit|pay (?:a |an )?(?:fee|amount|deposit)'
 
-include_internships: false        # true = also show internships (e.g. 6-month with PPO)
+# Jobs, internships, or both. false = jobs only, true = jobs and internships, only = internships only.
+# When on, Internshala's and Unstop's internship listings and Google's, Amazon's and Microsoft's intern searches are
+# read too. Internship pay is a monthly stipend, with its own floor (salary.stipend_min).
+internships: false
+
 max_age_days: 30                  # ignore postings older than this (when the board says)
 
 locations:
@@ -102,6 +106,8 @@ salary:
   currency: INR                   # pay is shown in this: INR as LPA, others in thousands a year (USD: "$90k-120k")
   min: 0                          # hide jobs whose listed pay tops out below this: INR in LPA (6 = ₹6 LPA),
                                   # other currencies in thousands a year (USD 90 = $90k). 0 = off
+  stipend_min: 0                  # internships: hide those whose stipend tops out below this a month, in your
+                                  # currency (10000 = ₹10,000 a month), and unpaid ones. 0 = off
   hide_unknown: false             # true = also hide jobs that don't list pay (would drop most big companies)
 
 # ---------------------------------------------------------------- AI (optional, free tier)

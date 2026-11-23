@@ -7,6 +7,7 @@ All sources are listed in `config/sources.yaml`.
 | Company job boards (public APIs) | Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Rippling |
 | Company career sites | Workday (NVIDIA, Adobe, Salesforce, Intel, PayPal and more), Oracle Recruiting (JPMorgan, Oracle), Eightfold (Microsoft, Qualcomm), Amazon, Atlassian, Freshteam career pages |
 | Job platforms | Unstop, Internshala, Shine, Wellfound, Google Careers, and the remote boards Himalayas, RemoteOK and Jobicy |
+| Internships (when `internships` is on) | Internshala and Unstop internships, Google, Amazon and Microsoft intern searches, and every company board above |
 
 Internshala, Shine, Wellfound, Google Careers and Freshteam career pages have no usable API, so their pages are read
 directly. The generic scraper works on any site whose job pages include schema.org `JobPosting` data, which most do

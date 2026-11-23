@@ -33,6 +33,10 @@ def parse(rows: list) -> list[Job]:
         skills = [s.get("skill") or s.get("name") for s in r.get("required_skills") or [] if isinstance(s, dict)]
         if skills:
             parts.append("Skills: " + ", ".join(s for s in skills if s))
+        internship = "internship" in f"{r.get('subtype')} {r.get('type')}".lower()
+        unpaid = str(detail.get("paid_unpaid") or "").lower() == "unpaid"
+        if internship and unpaid:
+            parts.insert(0, "Stipend: unpaid.")
         if "Fresher" in eligible:
             level = "fresher"
         elif eligible == {"Experienced Professionals"}:
@@ -48,7 +52,9 @@ def parse(rows: list) -> list[Job]:
             expires=date_from_iso(str((r.get("regnRequirements") or {}).get("end_regn_dt") or r.get("end_date") or "")[:10]),
             accepting=_accepting(r),
             description="\n\n".join(p for p in parts if p),
-            employment_type=detail.get("timing") or "", level_hint=level, salary=_salary(detail),
+            employment_type=", ".join(x for x in ("Internship" if internship else "", "unpaid" if internship and unpaid
+                                                  else "", detail.get("timing") or "") if x),
+            level_hint=level, salary=_salary(detail),
         ))
     return jobs
 
@@ -75,12 +81,19 @@ def _salary(detail: dict) -> list[float] | None:
         return None
 
 
+def opportunities(internships) -> tuple[str, ...]:
+    """Unstop's listing types to search, from profile.yaml internships (False, True or "only")."""
+    return {"only": ("internships",), True: ("jobs", "internships")}.get(internships, ("jobs",))
+
+
 async def fetch(http, target) -> list[Job]:
     jobs: dict[str, Job] = {}
-    for query in target.opts.get("queries") or DEFAULT_QUERIES:
+    searches = [(kind, q) for kind in opportunities(target.opts.get("internships"))
+                for q in target.opts.get("queries") or DEFAULT_QUERIES]
+    for kind, query in searches:
         for page in range(1, MAX_PAGES + 1):
             data = await http.get_json(API, robots=True, params={
-                "opportunity": "jobs", "page": page, "per_page": PER_PAGE, "oppstatus": "open", "searchTerm": query})
+                "opportunity": kind, "page": page, "per_page": PER_PAGE, "oppstatus": "open", "searchTerm": query})
             block = data.get("data") or {}
             batch = parse(block.get("data"))
             for job in batch:

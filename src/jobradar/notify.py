@@ -14,9 +14,8 @@ from pathlib import Path
 import httpx
 
 from .export import summary_line
-from .report import posted_label, why
+from .report import pay_text, posted_label, why
 from .store import Store
-from .salary import label as pay_label
 from .util import clean_line, clip, safe_url, today
 
 
@@ -31,7 +30,7 @@ def pick(store: Store, cfg: dict) -> list[dict]:
 def _line(rec: dict, store: Store) -> tuple[str, str]:
     ai = rec.get("ai") or {}
     tag = f" [{clean_line(ai['verdict'])}]" if ai.get("verdict") else ""
-    pay = f", {pay_label(rec.get('salary'))}" if rec.get("salary") else ""
+    pay = f", {pay_text(rec)}" if pay_text(rec) else ""
     title, company = clip(clean_line(rec["title"]), 140), clip(clean_line(rec["company"]), 60)
     where, reason = clip(clean_line(rec.get("location") or ""), 40), clip(clean_line(why(rec)), 160)
     url = safe_url(rec["url"])

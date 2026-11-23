@@ -9,8 +9,8 @@ from collections import Counter
 from . import liveness, notify, sources
 from .ai import AuthError, Gemini, score_jobs
 from .config import Settings, resume_text
-from .filters import Rules
-from .http import Http
+from .filters import Rules, internship_mode
+from .http import Http, bucket_of, host_of
 from .models import Job
 from .privacy import redact
 from .salary import in_description
@@ -76,7 +76,7 @@ MAX_PER_BOARD = 3000   # postings read from one board per run
 
 async def collect(settings: Settings, store: Store, *, only: list[str] | None = None, log=print) -> dict:
     rules = Rules(settings.profile)
-    targets = sources.localize(sources.build_targets(settings.sources, only),
+    targets = sources.localize(sources.build_targets(settings.sources, only, internship_mode(settings.profile)),
                                (settings.profile.get("locations") or {}).get("country") or "")
     stats: dict = {"date": today().isoformat(), "targets": len(targets), "fetched": 0, "candidates": 0,
                    "new": 0, "dropped": Counter(), "errors": {}, "detail_errors": {}, "closed": 0,
@@ -135,14 +135,26 @@ async def collect(settings: Settings, store: Store, *, only: list[str] | None = 
                 fresh.append(job)
         stats["candidates"] = len(fresh)
 
+        turns: dict[str, asyncio.Semaphore] = {}
+
+        def turn(job) -> asyncio.Semaphore:
+            """A site's detail pages take turns as its request limit allows, so a job's deadline only starts when its
+            turn comes (Internshala reads one page every 1.5s: the 100th page would otherwise wait out its deadline)."""
+            url = job.detail.get("url") or job.url
+            bucket = bucket_of(host_of(url))
+            if bucket not in turns:
+                turns[bucket] = asyncio.Semaphore(http.parallel_limit(url))
+            return turns[bucket]
+
         async def enrich_one(job):
-            try:
-                await asyncio.wait_for(sources.enrich(http, job), DETAIL_DEADLINE)
-                return None
-            except asyncio.TimeoutError:
-                return f"detail page took over {DETAIL_DEADLINE}s"
-            except Exception as exc:
-                return f"{type(exc).__name__}: {exc}"[:160]
+            async with turn(job):
+                try:
+                    await asyncio.wait_for(sources.enrich(http, job), DETAIL_DEADLINE)
+                    return None
+                except asyncio.TimeoutError:
+                    return f"detail page took over {DETAIL_DEADLINE}s"
+                except Exception as exc:
+                    return f"{type(exc).__name__}: {exc}"[:160]
 
         need, per_board = [], Counter()
         for job in [j for j in fresh if j.needs_detail]:
@@ -188,6 +200,10 @@ async def run(settings: Settings, *, use_ai: bool = True, send: bool = True, onl
     store = Store(settings.store_path)
     if recheck:
         store.rejected.clear()  # postings rejected earlier get evaluated again (their pages are re-read)
+    mode = internship_mode(settings.profile)
+    for key in [k for k, v in store.rejected.items()  # internships turned on or off: read those postings again
+                if (v.get("reason") == "internship" and mode) or (v.get("reason") == "not-internship" and mode != "only")]:
+        del store.rejected[key]
     if rescore:
         for rec in store.all():
             if not rec.get("closed") and rec.get("description"):

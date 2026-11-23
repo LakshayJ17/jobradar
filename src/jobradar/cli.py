@@ -12,14 +12,12 @@ import webbrowser
 from . import pipeline
 from .ai import AIError, AuthError, Gemini
 from .config import init_files, load_settings, resume_text
-from .filters import Rules, expand_cities
+from .filters import Rules, expand_cities, internship_mode
 from .salary import RATES
 from .util import COUNTRIES, country_name, country_names
 from .http import Http
 from .privacy import extraction_warnings, redact
-from .report import posted_label, reviews_url, why
-from .salary import label as pay_label
-from .salary import short as pay_short
+from .report import internship, pay_text, posted_label, reviews_url, why
 from .salary import unit as pay_unit
 from .sources import MODULES, SLUG_SOURCES, Target, build_targets
 from .store import STATUSES, Store, status_label
@@ -37,7 +35,7 @@ def _print_table(rows: list[dict], store: Store) -> None:
         print(f"{r['id']:>5}  {store.score_of(r):>5}  {clean_line(verdict):<6} {clip(clean_line(r['company']), 18):<18} "
               f"{clip(clean_line(r['title']), title_w):<{title_w}} "
               f"{clip(('* ' if r.get('rank_bonus') else '') + clean_line(r.get('location')), 22):<22} "
-              f"{pay_short(r.get('salary')) or '-':<11} "
+              f"{pay_text(r, short=True) or '-':<11} "
               f"{posted_label(r):<8} {status_label(r)}")
 
 
@@ -97,6 +95,8 @@ def cmd_list(args, settings) -> int:
         rows = [r for r in rows if args.company.lower() in r["company"].lower()]
     if args.min:
         rows = [r for r in rows if store.score_of(r) >= args.min]
+    if args.internships or args.jobs:
+        rows = [r for r in rows if internship(r) == bool(args.internships)]
     rows = store.ranked(rows)
     if not rows:
         print("Nothing here yet. Run `jobradar run` first." if not store.jobs else "No jobs match those filters.")
@@ -106,6 +106,8 @@ def cmd_list(args, settings) -> int:
         print(f"... {len(rows) - args.limit} more (use --limit)")
     if any(r.get("rank_bonus") for r in rows[: args.limit]):
         print("* preferred location (profile.yaml locations.preferred, or remote): ranked higher, score unchanged")
+    if any(internship(r) for r in rows[: args.limit]):
+        print("Internship pay is the stipend a month (/mo); job pay is a year.")
     return 0
 
 
@@ -132,7 +134,7 @@ def cmd_show(args, settings) -> int:
               + (f" until {rec['expires']}" if rec.get("expires") else ""))
     else:
         print("  not checked yet: run `jobradar check " + str(rec["id"]) + "` before applying")
-    print(f"  pay {pay_label(rec.get('salary')) or 'not listed'} | "
+    print(f"  {'internship | stipend' if internship(rec) else 'pay'} {pay_text(rec) or 'not listed'} | "
           f"{'preferred location' if rec.get('rank_bonus') else 'not a preferred location'}")
     print(f"  reviews {reviews_url(rec['company'])}")
     print(f"  rule score {rec.get('rule_score')} | {line(', '.join(rec.get('signals') or [])) or '-'}")
@@ -261,6 +263,13 @@ def profile_warnings(p: dict) -> list[str]:
         out.append(f"salary.currency {cur} is unknown, so pay is shown in INR. Known: {', '.join(RATES)}")
     if int(p.get("min_years_required") or 0) > int(p.get("max_years_required", 1)):
         out.append("min_years_required is above max_years_required: every job that states its years is dropped")
+    mode = internship_mode(p)
+    if (p.get("salary") or {}).get("stipend_min") and not mode:
+        out.append("salary.stipend_min is set but internships are off (internships: false), so it does nothing")
+    if p.get("internships") not in (None, True, False) and str(p.get("internships")).strip().lower() not in (
+            "only", "true", "false", "yes", "no", "on", "off", "include", "1", "0"):
+        out.append(f"internships: {p.get('internships')!r} isn't understood, so internships are off. "
+                   "Use false, true or only")
     exp = int(p.get("experience_years") or 0)
     if exp >= 3 and "senior" in (p.get("exclude_levels") or []):
         out.append(f"experience_years is {exp} but exclude_levels drops 'senior' jobs: use [director, executive]")
@@ -272,7 +281,7 @@ def cmd_init(args, settings) -> int:
     for path, action in init_files(settings.root):
         print(f"  {path:<20} {action}")
     print("\nNext:\n"
-          "  1. edit config/profile.yaml: graduation_year, skills, locations.preferred, salary.min_lpa\n"
+          "  1. edit config/profile.yaml: graduation_year, skills, internships, locations.preferred, salary.min\n"
           "  2. copy your resume into profile/ (any name; .pdf, .txt or .md). It never leaves this machine\n"
           "     except as redacted text for the AI (see `jobradar resume`)\n"
           "  3. optional: put a free GEMINI_API_KEY in .env (https://aistudio.google.com/apikey)\n"
@@ -289,7 +298,10 @@ def cmd_doctor(args, settings) -> int:
         print("          ! skills is empty: list yours in config/profile.yaml (they raise the rule score)")
     for w in profile_warnings(settings.profile):
         print(f"          ! {w}")
-    targets = build_targets(settings.sources)
+    mode = internship_mode(settings.profile)
+    print(f"looking   {'internships only' if mode == 'only' else 'jobs and internships' if mode else 'jobs only'}"
+          " (profile.yaml internships)")
+    targets = build_targets(settings.sources, internships=mode)
     counts = {}
     for t in targets:
         counts[t.source] = counts.get(t.source, 0) + 1
@@ -505,6 +517,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--new", action="store_true", help="only jobs first seen today")
     p.add_argument("--company")
     p.add_argument("--min", type=int, help="minimum score")
+    kind = p.add_mutually_exclusive_group()
+    kind.add_argument("--internships", action="store_true", help="only internships")
+    kind.add_argument("--jobs", action="store_true", help="only jobs (no internships)")
     p.add_argument("--limit", type=int, default=40)
     p.set_defaults(fn=cmd_list)
 

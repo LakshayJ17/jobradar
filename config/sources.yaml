@@ -138,17 +138,20 @@ oracle:                # Oracle Recruiting Cloud career sites - your country fou
   - {name: JPMorgan Chase, host: jpmc.fa.oraclecloud.com, site: CX_1001}
   - {name: Oracle, host: eeho.fa.us2.oraclecloud.com, site: CX_45001}
 
-google: {levels: [EARLY]}        # Google Careers, early-career roles in your country (scraped results pages)
+google: {levels: [EARLY]}        # Google Careers, early-career roles in your country (scraped results pages);
+                                 # internships too when profile.yaml asks for them
 atlassian: {}                    # Atlassian's public listings feed
-unstop: {queries: [software, developer, engineer, data, machine learning, ai]}   # India fresher hiring
+unstop: {queries: [software, developer, engineer, data, machine learning, ai]}   # India fresher hiring (+ internships)
 wellfound: {roles: [software-engineer, full-stack-engineer, backend-engineer, frontend-engineer,
                     machine-learning-engineer, data-scientist]}                  # startups (scraped)
 remote: [himalayas, remoteok, jobicy]   # remote boards; only roles open to you (locations.remote_open_to) survive
 
 # Generic scraper: any site whose job pages carry schema.org JobPosting data (most do - Google for Jobs needs it).
 # robots.txt and the no-fetch list in http.py are enforced on every request.
+# kind: jobs = skipped when profile.yaml wants internships only; kind: internships = read only when it wants them.
 scrape:
   - name: Internshala
+    kind: jobs
     list_urls:
       - https://internshala.com/fresher-jobs/software-development-jobs/
       - https://internshala.com/fresher-jobs/web-development-jobs/
@@ -166,7 +169,31 @@ scrape:
       location: ['id="location_names">', '</p>']
       description: ['class="internship_details">', 'about_company_text_container']
       posted: ['ic-16-reschedule"></i>', '</div>']
+  - name: Internshala
+    board: internshala-internships
+    kind: internships
+    list_urls:
+      - https://internshala.com/internships/software-development-internship/
+      - https://internshala.com/internships/web-development-internship/
+      - https://internshala.com/internships/backend-development-internship/
+      - https://internshala.com/internships/full-stack-development-internship/
+      - https://internshala.com/internships/front-end-development-internship/
+      - https://internshala.com/internships/data-science-internship/
+      - https://internshala.com/internships/machine-learning-internship/
+      - https://internshala.com/internships/artificial-intelligence-ai-internship/
+      - https://internshala.com/internships/python-django-internship/
+    link_pattern: '^/internship/detail/'
+    title_from_url: '/internship/detail/(?:work-from-home-)?(.+?-internship)'   # keeps "part-time" for the title filter
+    salary_label: 'Stipend'
+    max_details: 60
+    page_fallback:
+      title: ['class="heading_4_5 profile">', '</div>']
+      company: ['class="heading_6 company_name">', '</div>']
+      location: ['id="location_names">', '</p>']
+      description: ['class="internship_details">', 'about_company_text_container']
+      posted: ['ic-16-reschedule"></i>', '</div>']
   - name: Shine
+    kind: jobs
     list_urls:
       - https://www.shine.com/job-search/software-engineer-fresher-jobs
       - https://www.shine.com/job-search/fresher-software-developer-jobs

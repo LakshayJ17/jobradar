@@ -43,7 +43,10 @@ async def fetch(http, target) -> list[Job]:
     seen: dict[str, Job] = {}
     code = country_code(target.opts.get("country", "India"), alpha=3)
     country = {"country": code} if code else {}  # unknown country: search everywhere, the location filter decides
-    for query in target.opts.get("queries") or DEFAULT_QUERIES:
+    queries = list(target.opts.get("queries") or DEFAULT_QUERIES)
+    if target.opts.get("internships"):
+        queries.append("intern")  # its is_intern flag is often unset, so the title decides (filters.is_internship)
+    for query in dict.fromkeys(queries):
         offset = 0
         for _ in range(MAX_PAGES):
             data = await http.get_json(API, params={"base_query": query, **country, "result_limit": PAGE,

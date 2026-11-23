@@ -8,8 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .report import posted_label, reviews_url, why
-from .salary import in_units, unit
+from .report import internship, pay_columns, posted_label, reviews_url, why
 from .store import Store, status_label
 from .util import safe_url, today
 
@@ -18,22 +17,24 @@ LINK_LIMIT = 2_000    # and hyperlinks over 2,079
 
 ACTIVE = ("saved", "applied", "oa", "interview", "offer")
 COLUMNS = [  # (header, width)
-    ("ID", 6), ("Score", 7), ("AI verdict", 10), ("Company", 24), ("Role", 44), ("Location", 30), ("Preferred", 10),
+    ("ID", 6), ("Score", 7), ("AI verdict", 10), ("Company", 24), ("Role", 44), ("Type", 11), ("Location", 30),
+    ("Preferred", 10),
     ("Pay min", 9), ("Pay max", 9), ("Pay unit", 9), ("Posted", 11), ("Age", 8), ("Status", 11), ("Why / gaps", 70),
     ("Job link", 40), ("Reviews", 12), ("Notes", 30),
 ]
+LINK_COLUMNS = {name: i for i, (name, _) in enumerate(COLUMNS, 1) if name in ("Job link", "Reviews")}
 _VERDICT_COLOURS = {"apply": "1F7A4D", "maybe": "9A6A00", "skip": "AA3333", "no": "AA3333"}
 
 
 def _row(rec: dict, store: Store) -> list:
     ai = rec.get("ai") or {}
-    pay = in_units(rec.get("salary"))
+    lo, hi, pay_unit = pay_columns(rec)
     verdict = "ineligible" if ai.get("eligible") == "no" else ai.get("verdict", "")
     status = status_label(rec) + (f" (closed: {rec['closed_reason']})" if rec.get("closed") and rec.get("closed_reason")
                                   else " (closed)" if rec.get("closed") else "")
-    return [rec["id"], store.score_of(rec), verdict, rec["company"], rec["title"], rec.get("location") or "",
-            "yes" if rec.get("rank_bonus") else "", round(pay[0], 1) if pay else None,
-            round(pay[1], 1) if pay else None, unit() if pay else "", rec.get("posted_at") or "",
+    return [rec["id"], store.score_of(rec), verdict, rec["company"], rec["title"],
+            "Internship" if internship(rec) else "Job", rec.get("location") or "",
+            "yes" if rec.get("rank_bonus") else "", lo, hi, pay_unit, rec.get("posted_at") or "",
             posted_label(rec), status, why(rec), rec["url"], "reviews", rec.get("notes") or ""]
 
 
@@ -75,7 +76,8 @@ def write_xlsx(store: Store, path: Path) -> Path:
                 if isinstance(value, str):
                     cell.data_type = "s"  # job text is never a formula, even when it starts with "="
                 cell.alignment = wrap if COLUMNS[col - 1][0] in ("Why / gaps", "Role", "Location") else top
-            for col, url in ((15, safe_url(rec["url"])), (16, safe_url(reviews_url(rec["company"])))):
+            for col, url in ((LINK_COLUMNS["Job link"], safe_url(rec["url"])),
+                             (LINK_COLUMNS["Reviews"], safe_url(reviews_url(rec["company"])))):
                 if url and len(url) <= LINK_LIMIT and not ILLEGAL_CHARACTERS_RE.search(url):
                     ws.cell(r, col).hyperlink = url  # only plain http(s) links become clickable
                     ws.cell(r, col).font = link_font

@@ -60,6 +60,16 @@ def floor_lpa(pay_cfg: dict | None, currency: str = "INR") -> float:
     return float(pay_cfg.get("min_lpa") or 0)
 
 
+def stipend_floor(pay_cfg: dict | None, currency: str = "INR") -> float:
+    """salary.stipend_min (internships: an amount a month in your currency, e.g. 10000 = ₹10,000 a month) in the
+    canonical unit, so it compares with stored pay. 0 = off."""
+    try:
+        value = float((pay_cfg or {}).get("stipend_min") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+    return round(value * 12 * RATES[currency] / 1e5, 4) if math.isfinite(value) and value > 0 else 0.0
+
+
 def _currency(text: str | None, default: str = "INR") -> str:
     t = (text or "").lower()
     if t in ("₹", "rs", "rs.", "inr", "fa-rupee"):
@@ -101,7 +111,8 @@ def to_lpa(lo: float | None, hi: float | None, currency: str = "INR", period: st
     if currency.upper() != "INR" and period == "year" and high < 1000:
         return None  # "$20-40" is hourly pay mislabelled as yearly
     out = [round(low * mult * rate / 1e5, 2), round(high * mult * rate / 1e5, 2)]
-    return out if 0.3 <= out[1] <= 1000 else None
+    lowest = 0.05 if period == "month" else 0.3  # internship stipends can be ₹1,000 a month; a yearly figure can't
+    return out if lowest <= out[1] <= 1000 else None
 
 
 def _period(text: str, m: re.Match, unit: str) -> str | None:
@@ -228,3 +239,37 @@ def label(sal: list[float] | None, currency: str | None = None) -> str:
     lo, _, hi = nums.partition("-")
     text = f"{lo}k-{hi}k" if hi else f"{lo}k"
     return f"{SYMBOLS[cur]}{text}" if cur in SYMBOLS else f"{cur} {text}"
+
+
+# ---------------------------------------------------------------- internship stipends: shown per month
+def monthly(sal: list[float] | None, currency: str | None = None) -> tuple[float, float] | None:
+    """[min, max] a month in a currency's own units (rupees, dollars), from stored yearly pay."""
+    if not sal:
+        return None
+    rate = RATES[currency or _DISPLAY["currency"]]
+    return float(sal[0]) * 1e5 / rate / 12, float(sal[1]) * 1e5 / rate / 12
+
+
+def amount_k(value: float) -> str:
+    """11000 -> '11k', 7500 -> '7.5k', 800 -> '800'."""
+    if value >= 1000:
+        return f"{value / 1000:.1f}".rstrip("0").rstrip(".") + "k"
+    return f"{round(value):d}"
+
+
+def stipend_short(sal: list[float] | None, currency: str | None = None) -> str:
+    """'11k-20k/mo': a stipend for table columns; '' when unknown."""
+    vals = monthly(sal, currency)
+    if not vals:
+        return ""
+    lo, hi = amount_k(vals[0]), amount_k(vals[1])
+    return (lo if lo == hi else f"{lo}-{hi}") + "/mo"
+
+
+def stipend_label(sal: list[float] | None, currency: str | None = None) -> str:
+    """'₹11k-20k a month'; '' when unknown."""
+    cur = currency or _DISPLAY["currency"]
+    nums = stipend_short(sal, cur).removesuffix("/mo")
+    if not nums:
+        return ""
+    return f"{SYMBOLS[cur]}{nums} a month" if cur in SYMBOLS else f"{cur} {nums} a month"

@@ -366,7 +366,7 @@ def test_xlsx_keeps_job_text_as_text(tmp_path, make_job):
 
     ws = load_workbook(path)["All tracked"]
     assert ws["E2"].value.startswith("=HYPERLINK") and ws["E2"].data_type == "s"
-    assert ws["D2"].value == "@SUM(1+1)" and ws["O2"].hyperlink is None  # no javascript: links
+    assert ws["D2"].value == "@SUM(1+1)" and ws["P2"].hyperlink is None  # no javascript: links
     assert rec["id"] == ws["A2"].value
 
 

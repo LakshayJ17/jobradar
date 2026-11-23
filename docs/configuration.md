@@ -17,13 +17,14 @@ shows what to change for anything else.
 | `skills` | Each one found in a job raises its rule score (+2, max +20). Application drafts treat this list as true, so list only what you can defend in an interview | `[]` |
 | `looking_for` | The roles you want, in plain words, for the AI | software engineering, AI / ML or data roles |
 | `roles`, `exclude_titles` | Regexes a job title must match / must not match | software, AI, data, early-career; nothing senior, non-engineering or hardware |
-| `include_internships` | Show internships too | `false` |
+| `internships` | `false` jobs only, `true` jobs and internships, `only` internships only ([details](#internships)) | `false` |
 | `max_age_days` | Ignore older postings | `30` |
 | `locations.country` | Country that career sites with a country filter are searched in (Workday, Oracle, Microsoft, Amazon, Google, Wellfound, Jobicy) | `India` |
 | `locations.accept` | Places that count as yours | 30 Indian cities |
 | `locations.remote_open_to` | Words that make a remote job open to you | india, apac, asia, anywhere, worldwide, global |
 | `locations.preferred`, `locations.groups` | Ranked higher (nothing is hidden); your own city groups | `[]`, `{}` |
 | `salary.currency`, `salary.min` | Currency pay is shown in, and the floor in it (LPA for INR, thousands a year otherwise) | `INR`, `0` (off) |
+| `salary.stipend_min` | Internships: the stipend floor, a month in your currency (`10000` = ₹10,000 a month). Also hides unpaid ones | `0` (off) |
 | `ai.models`, `ai.draft_models` | Gemini free-tier models, tried in order | flash-lite models first |
 | `verify.per_run`, `verify.every_days` | Tracked jobs re-checked per run to confirm they're still open, and how often each is re-checked ([details](sources.md#checking-jobs-are-still-open)) | `40`, `3` |
 | `resume.style` | Look of tailored resumes (paper, font size, headings) | A4, 10 pt, bold headings |
@@ -59,6 +60,32 @@ salary:
 - **How the floor works:** a range counts if its top end reaches the floor, so "4-7 LPA" passes a floor of 6.
 - **Coverage:** in India only about 1 in 4 postings lists pay, and many large companies never do, which is why jobs
   without pay are kept by default. US postings usually state a range.
+
+## Internships
+
+```yaml
+internships: true       # false = jobs only, true = jobs and internships, only = internships only
+salary:
+  stipend_min: 10000    # hide internships paying under ₹10,000 a month, and unpaid ones
+```
+
+- **Where they come from:** company boards list internships alongside jobs (Greenhouse, Lever, Workday and the
+  rest), and with the setting on jobradar also reads Internshala's internship listings, Unstop's internships, and
+  Google's, Amazon's and Microsoft's intern searches. With `only`, the fresher-job listings (Internshala jobs, Shine)
+  are skipped.
+- **Titles:** an internship needs to name your field like any early-career title (`early_career_title_needs`), so
+  "Data Science Intern" and "Web Development - Internship" are kept and "Graphic Design - Internship" isn't. Your
+  `exclude_titles` still apply, so part-time internships are dropped unless you remove `part[- ]?time`.
+- **Pay:** a stipend is shown a month (`₹11k-20k a month`, or `11k-20k/mo` in tables) and checked against
+  `salary.stipend_min`; `salary.min` applies to jobs only. A posting that says it's unpaid shows as `unpaid`.
+- **Ranking:** an internship counts as an early-career role, and one that mentions a job offer at the end (PPO)
+  ranks a little higher. The AI is told whether you want internships; if your graduation year has passed,
+  internships open only to current students are marked ineligible.
+- **Finding them:** `jobradar list --internships` (or `--jobs`), the "Internships only" filter in the HTML report,
+  and the Type column in the spreadsheet.
+
+Turning the setting on or off applies to tracked jobs on the next run, like any other filter. Internshala serves
+about 60 new internship pages a run, so the first few runs after turning it on catch up on its backlog.
 
 ## Other setups
 

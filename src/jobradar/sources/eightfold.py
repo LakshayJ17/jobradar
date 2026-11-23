@@ -34,7 +34,10 @@ async def fetch(http, target) -> list[Job]:
     if not await http.robots_allowed(api):
         raise Blocked(f"robots.txt disallows {api}")
     seen: dict[str, Job] = {}
-    for query in target.opts.get("queries") or DEFAULT_QUERIES:
+    queries = list(target.opts.get("queries") or DEFAULT_QUERIES)
+    if target.opts.get("internships"):
+        queries.append("intern")
+    for query in dict.fromkeys(queries):
         start = 0
         for _ in range(MAX_PAGES):
             data = await http.get_json(api, params={"domain": target.opts["domain"], "query": query,

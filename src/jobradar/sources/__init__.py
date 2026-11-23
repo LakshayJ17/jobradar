@@ -60,8 +60,11 @@ def localize(targets: list[Target], country: str) -> list[Target]:
     return targets
 
 
-def build_targets(cfg: dict, only: list[str] | None = None) -> list[Target]:
-    """Turn config/sources.yaml into fetch targets. `only` filters by source name, board or company."""
+def build_targets(cfg: dict, only: list[str] | None = None, internships: bool | str = False) -> list[Target]:
+    """Turn config/sources.yaml into fetch targets. `only` filters by source name, board or company.
+    `internships` (profile.yaml: False, True or "only") is passed to every source: Unstop, Google, Amazon and
+    Eightfold also search internships when it's on, scrape entries with `kind: internships` are read only then,
+    and ones with `kind: jobs` are skipped when you want internships only."""
     targets: list[Target] = []
     for source in SLUG_SOURCES:
         for board, name in (cfg.get(source) or {}).items():
@@ -83,7 +86,12 @@ def build_targets(cfg: dict, only: list[str] | None = None) -> list[Target]:
     for board in cfg.get("remote") or []:
         targets.append(Target("remote", board, board.capitalize(), {}))
     for entry in cfg.get("scrape") or []:
+        kind = str(entry.get("kind") or "").lower()
+        if (kind == "internships" and not internships) or (kind == "jobs" and internships == "only"):
+            continue
         targets.append(Target("scrape", entry.get("board") or _slug(entry["name"]), entry["name"], dict(entry)))
+    for t in targets:
+        t.opts["internships"] = internships
     if only:
         wanted = {o.lower() for o in only}
         targets = [t for t in targets if {t.source.lower(), t.board.lower(), t.name.lower()} & wanted]

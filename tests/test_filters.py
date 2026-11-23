@@ -88,7 +88,7 @@ def test_internships_and_age(profile, make_job):
     old = (today() - timedelta(days=60)).isoformat()
     assert rules.prefilter(make_job(posted_at=old)) == "too-old"
     assert rules.prefilter(make_job(posted_at=None)) is None  # unknown date is kept
-    profile["include_internships"] = True
+    profile["internships"] = True
     assert Rules(profile).prefilter(make_job(title="Software Engineering Intern")) is None
 
 

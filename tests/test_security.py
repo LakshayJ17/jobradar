@@ -63,10 +63,10 @@ def test_spreadsheet_survives_hostile_urls_and_text(tmp_path):
     from openpyxl import load_workbook
 
     ws = load_workbook(path)["All tracked"]
-    assert ws["O2"].hyperlink.target == "https://ex.com/1"  # control character dropped, plain link kept
+    assert ws["P2"].hyperlink.target == "https://ex.com/1"  # control character dropped, plain link kept
     assert ws["E2"].data_type == "s" and len(ws["E2"].value) <= 32000
     rec["url"] = "javascript:alert(1)"
-    assert load_workbook(write_xlsx(store, tmp_path / "j2.xlsx"))["All tracked"]["O2"].hyperlink is None
+    assert load_workbook(write_xlsx(store, tmp_path / "j2.xlsx"))["All tracked"]["P2"].hyperlink is None
 
 
 def test_html_report_data_is_valid_json_and_cannot_break_out(tmp_path):

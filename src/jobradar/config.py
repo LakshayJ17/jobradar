@@ -30,7 +30,8 @@ DEFAULT_PROFILE: dict = {
     "roles": {"software": [r"software (development )?engineer", r"developer"]},
     "exclude_titles": [r"senior|lead|staff|principal|manager|director"],
     "exclude_description": [],
-    "include_internships": False,
+    "internships": None,                # false = jobs only, true = jobs and internships, "only" (None: the older
+                                        # include_internships setting, else false)
     "max_age_days": 30,
     "locations": {"country": "India", "accept": ["india"], "preferred": [], "preferred_boost": 10,
                   "remote_is_preferred": True, "remote": True},

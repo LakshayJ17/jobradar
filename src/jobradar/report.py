@@ -8,8 +8,10 @@ import re
 from pathlib import Path
 from urllib.parse import quote_plus
 
-from .salary import in_units, unit
+from .filters import is_internship, is_unpaid
+from .salary import in_units, monthly, stipend_label, stipend_short, unit
 from .salary import label as pay_label
+from .salary import short as pay_short
 from .store import Store, status_label
 from .util import clean_line, clip, days_ago, safe_url, today
 
@@ -26,6 +28,30 @@ def reviews_url(company: str) -> str:
     """A web search for the company's AmbitionBox / Glassdoor reviews, opened by you in the browser.
     Neither site has a public API and both forbid automated access, so jobradar never fetches ratings itself."""
     return "https://www.google.com/search?q=" + quote_plus(f"{company} reviews ambitionbox glassdoor")
+
+
+def internship(rec: dict) -> bool:
+    return is_internship(rec.get("title"), rec.get("employment_type"))
+
+
+def pay_text(rec: dict, *, short: bool = False) -> str:
+    """Pay as it should read: '₹6-9 LPA' for a job, '₹11k-20k a month' for an internship ('unpaid' when it says so).
+    short=True: '6-9' / '11k-20k/mo', for table columns headed by the unit. '' when unknown."""
+    sal = rec.get("salary")
+    if internship(rec):
+        if not sal and is_unpaid(rec.get("employment_type"), rec.get("description")):
+            return "unpaid"
+        return stipend_short(sal) if short else stipend_label(sal)
+    return pay_short(sal) if short else pay_label(sal)
+
+
+def pay_columns(rec: dict) -> tuple[float | None, float | None, str]:
+    """(min, max, unit) for spreadsheets: LPA (or thousands a year) for jobs, a month for internships."""
+    if internship(rec):
+        vals = monthly(rec.get("salary"))
+        return (round(vals[0]), round(vals[1]), "a month") if vals else (None, None, "")
+    vals = in_units(rec.get("salary"))
+    return (round(vals[0], 1), round(vals[1], 1), unit()) if vals else (None, None, "")
 
 
 def posted_label(rec: dict) -> str:
@@ -66,7 +92,7 @@ def _md_table(rows: list[dict]) -> str:
         lines.append("| {id} | {score} | {company} | {title} | {loc} | {pay} | {posted} | {status} | {why} |".format(
             id=r["id"], score=score_label(r), company=_md_cell(r["company"]), title=_md_link(r["title"], r["url"]),
             loc=_md_cell(clip(r.get("location") or "", 40)),
-            pay=pay_label(r.get("salary")) or "-",
+            pay=pay_text(r) or "-",
             posted=posted_label(r), status=_md_cell(status_label(r)), why=_md_cell(clip(why(r), 140))))
     return "\n".join(lines)
 
@@ -99,15 +125,16 @@ def write_csv(store: Store, path: Path) -> None:
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["id", "score", "ai_verdict", "ai_eligible", "company", "title", "location", "preferred_location",
-                    "pay_min", "pay_max", "pay_unit", "posted_at", "first_seen", "status", "url", "why"])
+                    "pay_min", "pay_max", "pay_unit", "posted_at", "first_seen", "status", "url", "why", "type"])
         for r in store.ranked([r for r in store.all() if not r.get("closed")]):
             ai = r.get("ai") or {}
+            lo, hi, pay_unit = pay_columns(r)
             w.writerow([safe(x) for x in (r["id"], store.score_of(r), ai.get("verdict", ""), ai.get("eligible", ""),
                                           r["company"], r["title"], r.get("location"),
-                                          "yes" if r.get("rank_bonus") else "",
-                                          *([round(v, 1) for v in in_units(r.get("salary")) or ()] or ["", ""]),
-                                          unit() if r.get("salary") else "", r.get("posted_at"),
-                                          r.get("first_seen"), r.get("status"), r["url"], why(r))])
+                                          "yes" if r.get("rank_bonus") else "", "" if lo is None else lo,
+                                          "" if hi is None else hi, pay_unit, r.get("posted_at"),
+                                          r.get("first_seen"), r.get("status"), r["url"], why(r),
+                                          "internship" if internship(r) else "job")])
 
 
 HTML_TEMPLATE = """<!doctype html>
@@ -135,6 +162,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}a{color:var(--accent
 <input type="search" id="q" placeholder="Search company, role, location, skills">
 <select id="verdict"><option value="">Any verdict</option><option value="apply">AI: apply</option><option value="maybe">AI: maybe</option><option value="unscored">Not AI-scored</option></select>
 <select id="status"><option value="">Any status</option></select>
+<select id="kind"><option value="">Jobs and internships</option><option value="job">Jobs only</option><option value="intern">Internships only</option></select>
 <label><input type="checkbox" id="onlynew"> new today</label>
 <label><input type="checkbox" id="pref"> preferred cities + remote</label>
 <label><input type="checkbox" id="paid"> pay listed</label>
@@ -151,15 +179,16 @@ document.getElementById('sub').textContent=D.summary;
 const st=document.getElementById('status');[...new Set(rows.map(r=>r.status))].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;st.appendChild(o)});
 function el(t,c,txt){const e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e}
 function render(){const q=document.getElementById('q').value.toLowerCase(),v=document.getElementById('verdict').value,s=st.value,
-on=document.getElementById('onlynew').checked,hid=document.getElementById('hidden').checked,pf=document.getElementById('pref').checked,pd=document.getElementById('paid').checked;const tb=document.getElementById('rows');tb.textContent='';
-rows.filter(r=>(hid||r.visible)&&(!on||r.is_new)&&(!pf||r.pref)&&(!pd||r.pay)&&(!s||r.status===s)&&(!v||(v==='unscored'?!r.verdict:r.verdict===v))&&(!q||r.search.includes(q)))
+on=document.getElementById('onlynew').checked,hid=document.getElementById('hidden').checked,pf=document.getElementById('pref').checked,pd=document.getElementById('paid').checked,
+k=document.getElementById('kind').value;const tb=document.getElementById('rows');tb.textContent='';
+rows.filter(r=>(hid||r.visible)&&(!on||r.is_new)&&(!pf||r.pref)&&(!pd||r.paid)&&(!k||(k==='intern')===r.intern)&&(!s||r.status===s)&&(!v||(v==='unscored'?!r.verdict:r.verdict===v))&&(!q||r.search.includes(q)))
 .sort((a,b)=>{const x=a[sortK],y=b[sortK];return (x>y?1:x<y?-1:0)*dir}).forEach(r=>{const tr=el('tr',r.is_new?'new':'');
 tr.appendChild(el('td','num',String(r.id)));const sc=el('td','num',String(r.score)+' ');if(r.verdict)sc.appendChild(el('span','pill '+r.verdict,r.verdict));
 if(r.eligible==='no')sc.appendChild(el('span','pill no','ineligible'));tr.appendChild(sc);const co=el('td','',r.company+' ');const rv=el('a','rev','reviews');rv.href=r.reviews;rv.target='_blank';rv.rel='noopener noreferrer';co.appendChild(rv);tr.appendChild(co);
-const t=el('td');const a=el('a','',r.title);a.href=r.url;a.target='_blank';a.rel='noopener noreferrer';t.appendChild(a);tr.appendChild(t);
+const t=el('td');const a=el('a','',r.title);a.href=r.url;a.target='_blank';a.rel='noopener noreferrer';t.appendChild(a);if(r.intern){t.appendChild(document.createTextNode(' '));t.appendChild(el('span','pill','internship'))}tr.appendChild(t);
 const lo=el('td','',r.location+' ');if(r.pref)lo.appendChild(el('span','pill pref','preferred'));tr.appendChild(lo);tr.appendChild(el('td','num',r.pay||'-'));tr.appendChild(el('td','num',r.posted_label));tr.appendChild(el('td','',r.status));tr.appendChild(el('td','why',r.why));tb.appendChild(tr)})}
 document.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;dir=(sortK===k)?-dir:(k==='score'?-1:1);sortK=k;render()});
-['q','verdict','status','onlynew','hidden','pref','paid'].forEach(id=>document.getElementById(id).addEventListener('input',render));render();
+['q','verdict','status','kind','onlynew','hidden','pref','paid'].forEach(id=>document.getElementById(id).addEventListener('input',render));render();
 </script></body></html>"""
 
 
@@ -171,7 +200,7 @@ def render_html(store: Store, stats: dict) -> str:
         url = safe_url(r["url"]) or "#"
         jobs.append({
             "id": r["id"], "score": store.score_of(r), "rank": store.score_of(r) + (r.get("rank_bonus") or 0),
-            "pref": bool(r.get("rank_bonus")), "pay": pay_label(r.get("salary")),
+            "pref": bool(r.get("rank_bonus")), "pay": pay_text(r), "paid": bool(r.get("salary")), "intern": internship(r),
             "pay_max": (r.get("salary") or [0, 0])[1], "reviews": reviews_url(r["company"]),
             "verdict": ai.get("verdict", ""),
             "eligible": ai.get("eligible", ""), "company": r["company"], "title": r["title"], "url": url,

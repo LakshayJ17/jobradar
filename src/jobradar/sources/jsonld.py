@@ -154,7 +154,10 @@ def apply_posting(job: Job, posting: dict) -> None:
     job.posted_at = date_from_iso(str(posting.get("datePosted") or "")) or job.posted_at
     job.expires = date_from_iso(str(posting.get("validThrough") or "")) or job.expires
     etype = posting.get("employmentType")
-    job.employment_type = ", ".join(etype) if isinstance(etype, list) else str(etype or job.employment_type or "")
+    etype = ", ".join(str(e) for e in etype) if isinstance(etype, list) else str(etype or "")
+    if "intern" in job.employment_type.lower() and "intern" not in etype.lower():
+        etype = ", ".join(x for x in (job.employment_type, etype) if x)  # the listing it came from says internship
+    job.employment_type = etype or job.employment_type
     job.salary = from_schema(posting.get("baseSalary")) or job.salary  # many boards put 0 here = not disclosed
     parts = []
     years = _min_years(posting)
@@ -190,6 +193,8 @@ async def fetch(http, target) -> list[Job]:
             jobs[url] = Job(
                 source="scrape", board=target.board, company=target.name, native_id=path,
                 title=_title_hint(url, text, title_rx), url=url,
+                # an internship listing's pages may title a post by its work alone ("Web Development")
+                employment_type="Internship" if str(o.get("kind") or "").lower() == "internships" else "",
                 needs_detail=True, detail={"url": url, "cap": int(o.get("max_details", 40)),
                                            "company_from_page": bool(o.get("company_from_page", True)),
                                            "salary_label": o.get("salary_label"),

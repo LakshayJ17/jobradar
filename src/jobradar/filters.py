@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 
 from .models import Job
-from .salary import currency_of, floor_lpa
+from .salary import amount_k, currency_of, floor_lpa, stipend_floor, stipend_label
 from .salary import label as salary_label
 from .util import country_name, country_names, days_ago
 
@@ -76,10 +76,39 @@ def _readable(text: str | None) -> str:
 # A title that only says "graduate / trainee / associate" must also name the field (profile early_career_title_needs).
 TECH_FIELD = r"engineer|developer|software|technolog|programm|data|\bai\b|\bml\b|\bit\b|\bsde\b|cloud|cyber"
 _INTERN_RX = re.compile(r"\bintern(?:ship)?s?\b|\bco-?op\b", re.I)
+# Internship titles often name the work, not the job: "Web Development - Internship" is a web developer's internship.
+_DEVELOPMENT_RX = re.compile(r"\bdevelopment\b", re.I)
+_UNPAID_RX = re.compile(r"\bunpaid\b|\bvolunteer\b", re.I)
+_UNPAID_TEXT_RX = re.compile(r"stipend\s*:?\s*(?:unpaid|none|nil|not provided)|\bunpaid internship\b", re.I)
+_JOB_OFFER_RX = re.compile(r"\bppo\b|pre[- ]?placement offer|(?:full[- ]time|job) offer|offer of (?:full[- ]time )?employment",
+                           re.I)
+_DURATION_RX = re.compile(r"duration\b\D{0,30}?(\d{1,2})\s*months?\b|\b(\d{1,2})[- ]months? (?:internship|duration)", re.I)
 # Board level labels, grouped under the names profile.yaml uses in exclude_levels.
 LEVELS = {"entry": {"entry_level", "internship", "university", "fresher"}, "senior": {"mid_senior_level"},
           "director": {"director"}, "executive": {"executive"}}
 _ENTRY_LEVELS = LEVELS["entry"]
+
+
+def internship_mode(profile: dict) -> bool | str:
+    """profile.yaml internships: false (jobs only), true (jobs and internships) or "only" (internships only).
+    The older include_internships: true still works."""
+    value = profile.get("internships")
+    if value is None:
+        value = profile.get("include_internships", False)
+    if isinstance(value, str):
+        word = value.strip().lower()
+        return "only" if word == "only" else word in ("true", "yes", "on", "include", "1")
+    return bool(value)
+
+
+def is_internship(title: str | None, employment_type: str | None = "") -> bool:
+    """An internship (or co-op), from its title or the board's employment type."""
+    return bool(_INTERN_RX.search(title or "")) or "intern" in (employment_type or "").lower()
+
+
+def is_unpaid(employment_type: str | None, description: str | None = "") -> bool:
+    """The posting says there is no stipend (Internshala marks these VOLUNTEER, Unstop "unpaid")."""
+    return bool(_UNPAID_RX.search(employment_type or "") or _UNPAID_TEXT_RX.search(_readable(description)))
 
 
 def remote_open_to(locs: dict) -> list[str]:
@@ -141,6 +170,8 @@ class Rules:
         pay = profile.get("salary") or {}
         self.currency = currency_of(profile)
         self.min_lpa = floor_lpa(pay, self.currency)
+        self.min_stipend = stipend_floor(pay, self.currency)
+        self.stipend_tag = amount_k(float(pay.get("stipend_min") or 0)) if self.min_stipend else ""
         self.floor_tag = (f"{float(pay.get('min') or 0):g}{'lpa' if self.currency == 'INR' else 'k-' + self.currency.lower()}"
                           if pay.get("min") not in (None, "") else f"{self.min_lpa:g}lpa")
         self.hide_unknown_pay = bool(pay.get("hide_unknown"))
@@ -152,7 +183,7 @@ class Rules:
         self.excluded_levels = {lvl for name in profile.get("exclude_levels") or [] for lvl in LEVELS.get(str(name), ())}
         self.field_rx = re.compile(profile.get("early_career_title_needs") or TECH_FIELD, re.I)
         self.max_age = profile.get("max_age_days")
-        self.internships = bool(profile.get("include_internships"))
+        self.internships = internship_mode(profile)  # False, True or "only"
         self.grad_year = int(profile.get("graduation_year") or 0)
         self.skills = [(s, re.compile(r"(?<![\w+#])" + re.escape(str(s)) + r"(?![\w+#])", re.I))
                        for s in profile.get("skills") or []]
@@ -179,13 +210,31 @@ class Rules:
         return 0
 
     def salary_reason(self, job: Job, *, final: bool) -> str | None:
-        """Drop jobs whose listed pay tops out below salary.min_lpa. Unknown pay is kept unless hide_unknown
-        (checked only once the full posting has been read: final=True)."""
+        """Drop jobs whose listed pay tops out below salary.min, and internships whose stipend tops out below
+        salary.stipend_min (or that are unpaid). Unknown pay is kept unless hide_unknown (checked only once the full
+        posting has been read: final=True)."""
+        if is_internship(job.title, job.employment_type):
+            if not self.min_stipend:
+                return None
+            if is_unpaid(job.employment_type, job.description):
+                return "unpaid"
+            if job.salary:
+                return f"stipend-below-{self.stipend_tag}" if job.salary[1] < self.min_stipend else None
+            return "stipend-not-listed" if final and self.hide_unknown_pay else None
         if not self.min_lpa:
             return None
         if job.salary:
             return f"salary-below-{self.floor_tag}" if job.salary[1] < self.min_lpa else None
         return "salary-not-listed" if final and self.hide_unknown_pay else None
+
+    def kind_reason(self, job: Job) -> str | None:
+        """Jobs or internships, as profile.yaml internships asks."""
+        intern = is_internship(job.title, job.employment_type)
+        if intern and not self.internships:
+            return "internship"
+        if not intern and self.internships == "only":
+            return "not-internship"
+        return None
 
     def prefilter(self, job: Job, *, ignore_age: bool = False) -> str | None:
         """Reason to drop the job, or None to keep it."""
@@ -197,17 +246,22 @@ class Rules:
             return "location"
         if any(rx.search(title) for rx in self.exclude):
             return "title-excluded"
-        if not self._title_targeted(title):
+        if reason := self.kind_reason(job):
+            return reason
+        if not self._title_targeted(title, is_internship(title, job.employment_type)):
             return "title-not-target"
-        if not self.internships and (_INTERN_RX.search(title) or "intern" in (job.employment_type or "").lower()):
-            return "internship"
         if reason := self.salary_reason(job, final=False):
             return reason
         return None if ignore_age else self._too_old(job)
 
-    def _title_targeted(self, title: str) -> bool:
-        return any(rx.search(title) for rx in self.include) or (
-            any(rx.search(title) for rx in self.early) and bool(self.field_rx.search(title)))
+    def _title_targeted(self, title: str, internship: bool = False) -> bool:
+        if any(rx.search(title) for rx in self.include) or (
+                any(rx.search(title) for rx in self.early) and bool(self.field_rx.search(title))):
+            return True
+        if internship:  # an internship is early-career; "Web Development - Internship" names the work, not the job
+            as_role = _DEVELOPMENT_RX.sub("developer", title)
+            return any(rx.search(as_role) for rx in self.include) or bool(self.field_rx.search(as_role))
+        return False
 
     def _too_old(self, job: Job) -> str | None:
         age = days_ago(job.posted_at)
@@ -226,10 +280,10 @@ class Rules:
             return "location"
         if any(rx.search(job.title or "") for rx in self.exclude):  # detail pages can refine the title
             return "title-excluded"
-        if not self._title_targeted(job.title or ""):
+        if reason := self.kind_reason(job):  # detail pages can say it's an internship (employmentType INTERN)
+            return reason
+        if not self._title_targeted(job.title or "", is_internship(job.title, job.employment_type)):
             return "title-not-target"
-        if not self.internships and (_INTERN_RX.search(job.title or "") or "intern" in (job.employment_type or "").lower()):
-            return "internship"
         if any(rx.search(text) for rx in self.exclude_desc):
             return "excluded-text"  # grade markers / fee-charging scams (profile: exclude_description)
         years = min_years_required(text)
@@ -252,8 +306,16 @@ class Rules:
         title, text = job.title or "", _readable(job.description)
         score, signals = 40, []
         years = min_years_required(text)
+        intern = is_internship(title, job.employment_type)
+        if intern:
+            signals.append("internship")
+            if m := _DURATION_RX.search(text):
+                signals.append(f"{m.group(1) or m.group(2)} months")
+            if _JOB_OFFER_RX.search(text):
+                score += 6
+                signals.append("job offer possible")
         if self.early_candidate:
-            if any(rx.search(title) for rx in self.early) or job.level_hint in _ENTRY_LEVELS:
+            if any(rx.search(title) for rx in self.early) or job.level_hint in _ENTRY_LEVELS or intern:
                 score += 20
                 signals.append("early-career role")
             if _FRESHER_RX.search(text):
@@ -276,7 +338,8 @@ class Rules:
             score += 4
             signals.append("preferred city")
         if job.salary:
-            signals.append(f"pay {salary_label(job.salary, self.currency)}")
+            signals.append(f"stipend {stipend_label(job.salary, self.currency)}" if intern
+                           else f"pay {salary_label(job.salary, self.currency)}")
         age = days_ago(job.posted_at)
         if age is not None and age <= 3:
             score += 4

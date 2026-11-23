@@ -172,7 +172,7 @@ class Http:
             transport=transport,
         )
         self._total = asyncio.Semaphore(total)
-        self._per_host = per_host
+        self.per_host = per_host
         self._host_sems: dict[str, asyncio.Semaphore] = {}
         self._host_next: dict[str, float] = {}
         self._robots: dict[str, Robots] = {}
@@ -187,9 +187,13 @@ class Http:
     async def __aexit__(self, *exc) -> None:
         await self.client.aclose()
 
+    def parallel_limit(self, url: str) -> int:
+        """How many requests to this URL's site may run at once."""
+        return BUCKET_LIMITS.get(bucket_of(host_of(url)), (self.per_host, 0))[0]
+
     def _sem(self, bucket: str) -> asyncio.Semaphore:
         if bucket not in self._host_sems:
-            self._host_sems[bucket] = asyncio.Semaphore(BUCKET_LIMITS.get(bucket, (self._per_host, 0))[0])
+            self._host_sems[bucket] = asyncio.Semaphore(BUCKET_LIMITS.get(bucket, (self.per_host, 0))[0])
         return self._host_sems[bucket]
 
     async def _space(self, bucket: str) -> None:
